@@ -552,10 +552,6 @@ class Plots(metaclass=utils.MetaCog):
         # Inverts
         ax.invert_yaxis()
 
-        # File
-        current = datetime.datetime.utcnow()
-        save = current.strftime("%Y-%m-%d%H%M")
-
         f = BytesIO()
         plt.savefig(f, bbox_inches='tight')
         f.seek(0)
@@ -574,7 +570,8 @@ class Plots(metaclass=utils.MetaCog):
         await ctx.channel.trigger_typing()
 
         to_do = functools.partial(self.ping_plotter, name='Websocket')
-        pfile = await self.bot.loop.run_in_executor(None, to_do)
+        pfile = await utils.evieecutor(to_do, loop=self.bot.loop)
+
         await ctx.send(file=discord.File(pfile, 'wsping.png'))
 
     @commands.command(name='rttping', cls=utils.EvieeCommand)
@@ -587,6 +584,7 @@ class Plots(metaclass=utils.MetaCog):
         await ctx.channel.trigger_typing()
 
         to_do = functools.partial(self.ping_plotter, data=self.bot._rtts, name='RTT')
-        pfile = await self.bot.loop.run_in_executor(None, to_do)
+        pfile = await utils.evieecutor(to_do, loop=self.bot.loop)
+
         await ctx.send(content=f'```ini\nLatest RTT: [{self.bot._rtts[-1]}]\n```',
                        file=discord.File(pfile, 'rttping.png'))
