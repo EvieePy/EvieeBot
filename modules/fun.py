@@ -229,7 +229,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
     def make_hug(self, a, b):
         base = Image.open('resources/hug.gif')
-        font = ImageFont.truetype('resources/fonts/playtime.ttf', 12)
+        font = ImageFont.truetype('arial.ttf', 12)
 
         HUGBASE = 45
 
@@ -261,7 +261,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
     def make_bn(self, user, msg: str):
         base = Image.open('resources/bn.gif')
-        font = ImageFont.truetype('resources/fonts/playtime.ttf', 16)
+        font = ImageFont.truetype('arial.ttf', 16)
 
         msg = ' '.join(msg.split())
         w, h = font.getsize(msg)
@@ -292,7 +292,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
     def make_lick2(self, a, b):
         base = Image.open('resources/lick2.gif')
-        font = ImageFont.truetype('resources/fonts/playtime.ttf', 30)
+        font = ImageFont.truetype('arial.ttf', 30)
 
         aw, ah = font.getsize(a.display_name)
         bw, bh = font.getsize(b.display_name)
@@ -316,7 +316,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
     def make_lick(self, a, b):
         base = Image.open('resources/lick.gif')
-        font = ImageFont.truetype('resources/fonts/playtime.ttf', 30)
+        font = ImageFont.truetype('arial.ttf', 30)
 
         aw, ah = font.getsize(a.display_name)
         bw, bh = font.getsize(b.display_name)
@@ -351,7 +351,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
     def make_hearts(self, a, b):
         base = Image.open('resources/heart.gif')
-        font = ImageFont.truetype('resources/fonts/playtime.ttf', 20)
+        font = ImageFont.truetype('arial.ttf', 20)
 
         aw, ah = font.getsize(a.display_name)
         bw, bh = font.getsize(b.display_name)
