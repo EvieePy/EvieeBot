@@ -227,30 +227,32 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
     def _licks(self):
         return {'lick1': self.make_lick, 'lick2': self.make_lick2}
 
-    def make_hug(self, a, b):
+    async def make_hug(self, a, b):
         base = Image.open('resources/hug.gif')
         font = ImageFont.truetype('resources/fonts/Playtime.ttf', 12)
 
-        HUGBASE = 45
+        hugbase = 45
 
         invalid = (6, 8, 9, 10, 11)
         values = {12: 45, 14: 10, 17: 5, 20: 5, 23: 5}
 
         frames = []
 
-        for index, frame in enumerate(ImageSequence.Iterator(base)):
-            draw = ImageDraw.Draw(frame)
+        def generate():
+            for index, frame in enumerate(ImageSequence.Iterator(base)):
+                draw = ImageDraw.Draw(frame)
 
-            if index in invalid:
-                pass
-            else:
-                HUGBASE += values.get(index, 15)
+                if index in invalid:
+                    pass
+                else:
+                    hugbase += values.get(index, 15)
 
-            draw.text((HUGBASE, 115), f'{a.display_name}', font=font, fill=self.hug_colour)
-            draw.text((170, 250), f'{b.display_name}', font=font, fill=self.hug_colour)
+                draw.text((hugbase, 115), f'{a.display_name}', font=font, fill=self.hug_colour)
+                draw.text((170, 250), f'{b.display_name}', font=font, fill=self.hug_colour)
 
-            image = frame.copy()
-            frames.append(image)
+                frames.append(frame.copy())
+
+        await self.bot.loop.run_in_executor(None, generate)
 
         f = io.BytesIO()
         frames[0].save(f, 'gif', save_all=True, duration=0, loop=0, append_images=frames[1:])
@@ -259,7 +261,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
         return discord.File(f, f'{a.id}{b.id}_hug.gif')
 
-    def make_bn(self, user, msg: str):
+    async def make_bn(self, user, msg: str):
         base = Image.open('resources/bn.gif')
         font = ImageFont.truetype('resources/fonts/Playtime.ttf', 16)
 
@@ -268,20 +270,21 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
         frames = []
 
-        for index, frame in enumerate(ImageSequence.Iterator(base)):
-            if index >= 7:
-                draw = ImageDraw.Draw(frame)
-                draw.fontmode = '1'
-                draw.text(((500 - w) / 2, (285 - h) / 2), msg, font=font, align='center', fill=99)
+        def generate():
+            for index, frame in enumerate(ImageSequence.Iterator(base)):
+                if index >= 7:
+                    draw = ImageDraw.Draw(frame)
+                    draw.fontmode = '1'
+                    draw.text(((500 - w) / 2, (285 - h) / 2), msg, font=font, align='center', fill=99)
 
-            image = frame.copy()
-            frames.append(image)
+                frames.append(frame.copy())
+
+        await self.bot.loop.run_in_executor(None, generate)
 
         last_frame = frames[-1]
 
         for x in range(25):
-            image = last_frame.copy()
-            frames.append(image)
+            frames.append(last_frame.copy())
 
         f = io.BytesIO()
         frames[0].save(f, 'gif', save_all=True, duration=0.1, loop=0, append_images=frames[1:])
@@ -290,7 +293,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
         return discord.File(f, f'{user.id}_bn.gif')
 
-    def make_lick2(self, a, b):
+    async def make_lick2(self, a, b):
         base = Image.open('resources/lick2.gif')
         font = ImageFont.truetype('resources/fonts/Playtime.ttf', 30)
 
@@ -299,13 +302,15 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
         frames = []
 
-        for index, frame in enumerate(ImageSequence.Iterator(base)):
-            draw = ImageDraw.Draw(frame)
-            draw.text(((420 - bw) / 2, 400), b.display_name, font=font, fill=self.hug_colour)
-            draw.text(((730 - aw) / 2, 60), a.display_name, font=font, fill=99)
+        def generate():
+            for index, frame in enumerate(ImageSequence.Iterator(base)):
+                draw = ImageDraw.Draw(frame)
+                draw.text(((420 - bw) / 2, 400), b.display_name, font=font, fill=self.hug_colour)
+                draw.text(((730 - aw) / 2, 60), a.display_name, font=font, fill=99)
 
-            image = frame.copy()
-            frames.append(image)
+                frames.append(frame.copy())
+
+        await self.bot.loop.run_in_executor(None, generate)
 
         f = io.BytesIO()
         frames[0].save(f, 'gif', save_all=True, duration=0.1, loop=0, append_images=frames[1:])
@@ -314,7 +319,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
         return discord.File(f, f'{a.id}{b.id}_licks2.gif')
 
-    def make_lick(self, a, b):
+    async def make_lick(self, a, b):
         base = Image.open('resources/lick.gif')
         font = ImageFont.truetype('resources/fonts/Playtime.ttf', 30)
 
@@ -323,24 +328,24 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
         frames = []
 
-        for index, frame in enumerate(ImageSequence.Iterator(base)):
-            draw = ImageDraw.Draw(frame)
-            draw.text(((500 - bw) / 2, 450), b.display_name, font=font, fill=self.hug_colour)
+        def generate():
+            for index, frame in enumerate(ImageSequence.Iterator(base)):
+                draw = ImageDraw.Draw(frame)
+                draw.text(((500 - bw) / 2, 450), b.display_name, font=font, fill=self.hug_colour)
 
-            if index >= 60 or index <= 8:
-                pass
-            else:
-                draw.text(((450 - aw) / 2, 150), a.display_name, font=font, align='center', fill=99)
-                # draw.text(((500 - w) / 2, (285 - h) / 2), msg, font=font, align='center', fill=99)
+                if index >= 60 or index <= 8:
+                    pass
+                else:
+                    draw.text(((450 - aw) / 2, 150), a.display_name, font=font, align='center', fill=99)
+                    # draw.text(((500 - w) / 2, (285 - h) / 2), msg, font=font, align='center', fill=99)
 
-            image = frame.copy()
-            frames.append(image)
+                frames.append(frame.copy())
 
+        await self.bot.loop.run_in_executor(None, generate)
         last_frame = frames[-1]
 
         for x in range(25):
-            image = last_frame.copy()
-            frames.append(image)
+            frames.append(last_frame.copy())
 
         f = io.BytesIO()
         frames[0].save(f, 'gif', save_all=True, duration=0.1, loop=0, append_images=frames[1:])
@@ -349,7 +354,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
         return discord.File(f, f'{a.id}{b.id}_lick.gif')
 
-    def make_hearts(self, a, b):
+    async def make_hearts(self, a, b):
         base = Image.open('resources/heart.gif')
         font = ImageFont.truetype('resources/fonts/Playtime.ttf', 20)
 
@@ -358,13 +363,15 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
         frames = []
 
-        for index, frame in enumerate(ImageSequence.Iterator(base)):
-            draw = ImageDraw.Draw(frame)
-            draw.text(((270 - bw) / 2, 70), b.display_name, font=font, fill=self.hug_colour)
-            draw.text(((730 - aw) / 2, 70), a.display_name, font=font, fill=99)
+        def generate():
+            for index, frame in enumerate(ImageSequence.Iterator(base)):
+                draw = ImageDraw.Draw(frame)
+                draw.text(((270 - bw) / 2, 70), b.display_name, font=font, fill=self.hug_colour)
+                draw.text(((730 - aw) / 2, 70), a.display_name, font=font, fill=99)
 
-            image = frame.copy()
-            frames.append(image)
+                frames.append(frame.copy())
+
+        await self.bot.loop.run_in_executor(None, generate)
 
         f = io.BytesIO()
         frames[0].save(f, 'gif', save_all=True, duration=0.1, loop=0, append_images=frames[1:])
@@ -393,11 +400,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
             return await ctx.send("You can't heart the air... **`xD`**")
 
         await ctx.trigger_typing()
-
-        to_run = partial(self.make_hearts, ctx.author, member)
-        gif = await self.bot.loop.run_in_executor(None, to_run)
-
-        await ctx.send(file=gif)
+        await ctx.send(file=await self.make_hearts(ctx.author, member))
 
     @commands.command(name='hug', cls=utils.AbstractorGroup, abstractors=['give'])
     @commands.cooldown(3, 90, commands.BucketType.user)
@@ -419,11 +422,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
             return await ctx.send("You can't hug the air... **`xD`**")
 
         await ctx.trigger_typing()
-
-        to_run = partial(self.make_hug, ctx.author, member)
-        gif = await self.bot.loop.run_in_executor(None, to_run)
-
-        await ctx.send(file=gif)
+        await ctx.send(file=await self.make_hug(ctx.author, member))
 
     @give_hug.command(name='give')
     async def _give_hug(self, ctx, *, member: discord.Member = None):
@@ -457,11 +456,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
             return await ctx.send('The length of your breaking news can not be longer than 50 characters long!')
 
         await ctx.trigger_typing()
-
-        to_run = partial(self.make_bn, ctx.author, msg)
-        gif = await self.bot.loop.run_in_executor(None, to_run)
-
-        await ctx.send(file=gif)
+        await ctx.send(file=await self.make_bn(ctx.author, msg))
 
     @commands.command(name='lick', aliases=['licky'], cls=utils.EvieeCommand)
     @commands.cooldown(3, 90, commands.BucketType.user)
@@ -491,10 +486,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
         await ctx.trigger_typing()
 
         n = random.randint(1, 2)
-        to_run = partial(self._licks[f'lick{n}'], ctx.author, member)
-        gif = await self.bot.loop.run_in_executor(None, to_run)
-
-        await ctx.send(file=gif)
+        await ctx.send(file=await self._licks[f'lick{n}'](ctx.author, member))
 
 
 class RPSLS(enum.Enum):
