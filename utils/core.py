@@ -32,11 +32,12 @@ import inspect
 import sys
 import traceback
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 
 import utils
 
 __all__ = ('EvieeContext', 'EvieeCommand', 'EvieeCommandGroup', 'AbstractorGroup', 'AbstractorCommand', 'Union',
-           'evieeloads', 'backoff_loop', 'get_dict', 'GuildConverter', 'MetaCog')
+           'evieeloads', 'backoff_loop', 'get_dict', 'GuildConverter', 'MetaCog', 'evieecutor')
 
 
 def get_dict(obj):
@@ -474,6 +475,19 @@ def backoff_loop(until_ready=True):
                     retrys = 0
         return wrapper
     return decorator
+
+
+async def evieecutor(func, executor=None, loop=None, *args, **kwargs):
+    if not executor:
+        executor = ThreadPoolExecutor(max_workers=2)
+
+    future = executor.submit(func, *args, **kwargs)
+    future = asyncio.wrap_future(future)
+
+    result = await asyncio.wait_for(future, timeout=None, loop=loop or asyncio.get_event_loop())
+    executor.shutdown(wait=False)
+
+    return result
 
 
 def setup(bot):

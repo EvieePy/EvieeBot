@@ -252,7 +252,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
                     frames.append(frame.copy())
 
-        await self.bot.loop.run_in_executor(None, generate)
+        await utils.evieecutor(generate, None, loop=self.bot.loop)
 
         f = io.BytesIO()
         frames[0].save(f, 'gif', save_all=True, duration=0, loop=0, append_images=frames[1:])
@@ -278,7 +278,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
                     frames.append(frame.copy())
 
-        await self.bot.loop.run_in_executor(None, generate)
+        await utils.evieecutor(generate, None, loop=self.bot.loop)
 
         last_frame = frames[-1]
 
@@ -308,7 +308,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
                     frames.append(frame.copy())
 
-        await self.bot.loop.run_in_executor(None, generate)
+        await utils.evieecutor(generate, None, loop=self.bot.loop)
 
         f = io.BytesIO()
         frames[0].save(f, 'gif', save_all=True, duration=0.1, loop=0, append_images=frames[1:])
@@ -338,7 +338,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
                     frames.append(frame.copy())
 
-        await self.bot.loop.run_in_executor(None, generate)
+        await utils.evieecutor(generate, None, loop=self.bot.loop)
         last_frame = frames[-1]
 
         for x in range(25):
@@ -367,7 +367,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
                     frames.append(frame.copy())
 
-        await self.bot.loop.run_in_executor(None, generate)
+        await utils.evieecutor(generate, None, loop=self.bot.loop)
 
         f = io.BytesIO()
         frames[0].save(f, 'gif', save_all=True, duration=0.1, loop=0, append_images=frames[1:])
