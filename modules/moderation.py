@@ -131,3 +131,30 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
         """
         await ctx.paginate(title=f'Prefixes for {ctx.guild.name}', entries=self.bot.lru_prefix[ctx.guild.id],
                            fmt='`"', footer='You may also mention me.')
+
+    @commands.command(name='cleanup', cls=utils.EvieeCommand)
+    @commands.has_permissions(manage_messages=True)
+    async def do_cleanup(self, ctx, limit: int=20):
+        """Cleanup bot messages.
+
+        !Manage Messages is required to run this command!
+
+        Parameters
+        ------------
+        limit: int [Optional]
+            The max amount of messages to try and clean. This defaults to 20.
+
+        Examples
+        ----------
+        <prefix>cleanup <limit>
+
+            {ctx.prefix}cleanup 30
+            {ctx.prefix}cleanup
+        """
+        cleared = await ctx.channel.purge(limit=limit, check=lambda m: m.author == ctx.guild.me)
+        await ctx.send(f'Successfully cleared `{len(cleared)}` message from myself.', delete_after=20)
+
+    @do_cleanup.error
+    async def do_cleanup_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions):
+            return await ctx.send('Manage Messages is required to run this command.')

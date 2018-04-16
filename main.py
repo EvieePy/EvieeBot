@@ -131,8 +131,8 @@ class Botto(commands.Bot):
 
     @utils.backoff_loop()
     async def wspings(self):
-        self._wspings.append(self.latency * 1000)
         await asyncio.sleep(60)
+        self._wspings.append(self.latency * 1000)
 
     @utils.backoff_loop()
     async def rttpings(self):
@@ -171,7 +171,7 @@ class Botto(commands.Bot):
                     if name not in self.extensions:
                         self.extensions[name] = lib
                 else:
-                    self.extensions_other = lib
+                    self.extensions_other[name] = lib
                     continue
 
         if name not in self.extensions:
