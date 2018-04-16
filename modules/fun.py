@@ -231,14 +231,13 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
         base = Image.open('resources/hug.gif')
         font = ImageFont.truetype('resources/fonts/Playtime.ttf', 12)
 
-        hugbase = 45
-
         invalid = (6, 8, 9, 10, 11)
         values = {12: 45, 14: 10, 17: 5, 20: 5, 23: 5}
 
         frames = []
 
         def generate():
+            hugbase = 45
             for index, frame in enumerate(ImageSequence.Iterator(base)):
                 draw = ImageDraw.Draw(frame)
 
