@@ -359,6 +359,6 @@ class Source(metaclass=utils.MetaCog, category='API', thumbnail='https://i.imgur
             return await ctx.send(embed=embed)
 
         bin_ = await self.bot.create_bin(data=code)
-        embed = discord.Embed(title=f'Source - <{target}>', description=bin_, colour=0x6dc9c9)
+        embed = discord.Embed(title=f'Source - <{target}>', description=f'{bin_}.py', colour=0x6dc9c9)
 
         return await ctx.send(embed=embed)
