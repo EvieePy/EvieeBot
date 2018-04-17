@@ -2,10 +2,10 @@ import discord
 from discord.ext import commands
 
 import asyncio
+import datetime
 import enum
 import io
 import random
-from functools import partial
 from PIL import Image, ImageSequence, ImageFont, ImageDraw, ImageColor
 
 import utils
@@ -20,6 +20,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
     def __init__(self, bot):
         self.bot = bot
+        bot.loop.create_task(self.temp_checker())
 
     async def __error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
@@ -98,6 +99,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
     @commands.command(name='temp', aliases=['temp_channel'], cls=utils.EvieeCommand)
     @commands.cooldown(1, 900, commands.BucketType.user)
+    @commands.bot_has_permissions(manage_channels=True)
     async def temp_chan(self, ctx, *, name: str=None):
         """Create a temporary Voice Channel.
 
@@ -145,8 +147,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
                                                         category=cat,
                                                         reason='Temp Channel.')
         except discord.HTTPException:
-            return await ctx.send('Something went wrong while trying to create your channel.'
-                                  ' Perhaps I do not have the correct permissions.')
+            return await ctx.send('Something went wrong while trying to create your channel. Please try again.')
 
         await ctx.send(f'**Your channel has been created.**\nOther members may now join **`{chan}`**\n'
                        f'```ini\nYour channel will be destroyed shortly after the channel becomes empty.\n'
@@ -154,11 +155,42 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
                        f'By Default, `@everyone` are unable to speak.```',
                        delete_after=30)
 
-        while not self.bot.is_closed():
-            await asyncio.sleep(120)
+        async with self.bot.pool.acquire() as conn:
+            query = """INSERT INTO tempchannels(cid, gid, ts) VALUES($1, $2, $3)"""
+            await conn.execute(query, chan.id, ctx.guild.id, datetime.datetime.utcnow())
 
-            if len(chan.members) == 0:
-                await chan.delete(reason='Temp Channel: Empty for too long.')
+    @temp_chan.error
+    async def temp_chan_error(self, ctx, error):
+        if isinstance(error, commands.BotMissingPermissions):
+            await ctx.send('I am missing permissions: **`Manage Channels`**')
+
+    @utils.backoff_loop()
+    async def temp_checker(self):
+        await asyncio.sleep(120)
+
+        async with self.bot.pool.acquire() as conn:
+            temps = await conn.fetch("""SELECT * FROM tempchannels""")
+
+            for c in temps:
+                ts = c['ts']
+                ts = datetime.datetime.utcnow() - ts
+
+                if ts.total_seconds() < 60:
+                    continue
+
+                chan = self.bot.get_channel(c['cid'])
+
+                if not chan:
+                    continue
+
+                if len(chan.members) == 0:
+                    query = """DELETE FROM tempchannels WHERE tempchannels.cid IN ($1)"""
+                    await conn.execute(query, chan.id)
+
+                    try:
+                        await chan.delete(reason='Temp Channel: Empty for too long.')
+                    except discord.HTTPException:
+                        pass
 
     @commands.command(name='feedback', aliases=['fb', 'suggest'], cls=utils.EvieeCommand)
     @commands.cooldown(2, 900, commands.BucketType.user)
@@ -275,9 +307,10 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
                         draw = ImageDraw.Draw(frame)
                         draw.fontmode = '1'
                         draw.text(((500 - w) / 2, (285 - h) / 2), msg, font=font, align='center', fill=99)
+                        del draw
 
                     frames.append(frame.copy())
-
+                        
         await utils.evieecutor(generate, None, loop=self.bot.loop)
 
         last_frame = frames[-1]
