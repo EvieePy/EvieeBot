@@ -482,7 +482,7 @@ async def evieecutor(func, executor=None, loop=None, *args, **kwargs):
         executor = ThreadPoolExecutor(max_workers=2)
 
     future = executor.submit(func, *args, **kwargs)
-    asyncio.wrap_future(future)
+    future = asyncio.wrap_future(future)
 
     result = await asyncio.wait_for(future, timeout=None, loop=loop or asyncio.get_event_loop())
     executor.shutdown(wait=False)
