@@ -140,7 +140,7 @@ class Botto(commands.Bot):
 
         ts = time.time()
         msg = await chan.send('Ping!')
-        rtt = time.time() - ts
+        rtt = (time.time() - ts) * 1000
 
         self._rtts.append(rtt)
         await msg.delete()

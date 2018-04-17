@@ -565,7 +565,7 @@ class Plots(metaclass=utils.MetaCog):
     async def ws_ping(self, ctx):
         """WebSocket Pings, shown as a pretty graph."""
         if len(self.bot._wspings) < 60:
-            return await ctx.send(f'WS Latency: **`{self.bot.latency * 1000}`**')
+            return await ctx.send(f'WS Latency: **`{self.bot.latency * 1000}`ms**')
 
         await ctx.channel.trigger_typing()
 
@@ -579,12 +579,12 @@ class Plots(metaclass=utils.MetaCog):
     async def rtt_ping(self, ctx):
         """RTT Pings, shown as a pretty graph."""
         if len(self.bot._rtts) < 60:
-            return await ctx.send(f'Latest RTT: **`{self.bot._rtts[-1]}`**')
+            return await ctx.send(f'Latest RTT: **`{self.bot._rtts[-1]}`ms**')
 
         await ctx.channel.trigger_typing()
 
         to_do = functools.partial(self.ping_plotter, data=self.bot._rtts, name='RTT')
         pfile = await utils.evieecutor(to_do, loop=self.bot.loop)
 
-        await ctx.send(content=f'```ini\nLatest RTT: [{self.bot._rtts[-1]}]\n```',
+        await ctx.send(content=f'```ini\nLatest RTT: [{self.bot._rtts[-1]}]ms\n```',
                        file=discord.File(pfile, 'rttping.png'))
