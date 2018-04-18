@@ -94,7 +94,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
     async def create_source(cls, ctx, search: str, *, loop, volume, download=True):
         loop = loop or asyncio.get_event_loop()
 
-        ytdlopts['outtmpl'] = f'/downloads/{ctx.guild.id}/%(extractor)s-%(id)s-%(title)s.%(ext)s'
+        ytdlopts['outtmpl'] = f'downloads/{ctx.guild.id}/%(extractor)s-%(id)s-%(title)s.%(ext)s'
         ytdl = youtube_dl.YoutubeDL(ytdlopts)
 
         to_run = partial(ytdl.extract_info, url=search, download=download)
