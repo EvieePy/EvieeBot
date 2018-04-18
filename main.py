@@ -395,12 +395,15 @@ async def shutdown(*, reason=None):
     await asyncio.sleep(5)
     await bot.logout()
 
-    print(f'\n\nShutting down due to {reason}...\n{"="*30}\n')
+    print(f'\n\nShutting down due to {type(reason).__name__}...\n{"="*30}\n')
     print(f'{datetime.datetime.utcnow()} || UTC\n\nPython: {sys.version}\nPlatform: {sys.platform}/{os.name}\n'
           f'Discord: {discord.__version__}\n\n{"="*30}\n')
 
     await asyncio.sleep(1)
-    sys.exit(1)
+
+    if isinstance(reason, KeyboardInterrupt):
+        sys.exit(1)  # Systemd will think it failed and restart our service cleanly.
+    sys.exit(0)
 
 
 @bot.command(name='restart', cls=utils.EvieeCommand)
@@ -421,7 +424,7 @@ def start():
     try:
         loop.run_until_complete(bot.start(config.get('TOKEN', '_tokenT')))
     except KeyboardInterrupt as e:
-        return loop.run_until_complete(shutdown(reason=type(e).__name__))
+        return loop.run_until_complete(shutdown(reason=e))
 
 
 start()
