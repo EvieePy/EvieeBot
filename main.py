@@ -400,7 +400,7 @@ async def shutdown(*, reason=None):
           f'Discord: {discord.__version__}\n\n{"="*30}\n')
 
     await asyncio.sleep(1)
-    sys.exit(0)
+    sys.exit(1)
 
 
 @bot.command(name='restart', cls=utils.EvieeCommand)
