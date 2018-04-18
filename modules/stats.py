@@ -303,6 +303,15 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
 
         return await ctx.send(member.avatar_url)
 
+    @commands.command(name='perms', aliases=['permissions'], cls=utils.EvieeCommand)
+    async def show_perms(self, ctx, *, target: utils.Union(discord.Member, discord.Role)=None):
+        """Display permissions for a user or role."""
+        if not target:
+            target = ctx.author
+
+        pages = await self.get_perms(ctx, target=target)
+        await ctx.paginate(extras=pages)
+
 
 class Plots(metaclass=utils.MetaCog):
     """Commands which make graphs and other pretties."""

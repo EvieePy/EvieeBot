@@ -200,7 +200,7 @@ class Admin(metaclass=utils.MetaCog, private=True):
 
             if ret is None:
                 if value:
-                    if len(value) > 2000:
+                    if len(value) > 1000:
                         mbin = await self.bot.create_bin(value)
                         await ctx.send(mbin)
                     else:
@@ -209,8 +209,8 @@ class Admin(metaclass=utils.MetaCog, private=True):
                 ctx.bot._last_result = ret
                 fmt = f'{value}{ret}'
 
-                if len(fmt) > 1989:  # len('```py\n\n```') == 10, one extra char for good measure
-                    code = textwrap.dedent(fmt).replace('`', '\uFEFF')
+                if len(fmt) > 1000:
+                    code = textwrap.dedent(fmt)
                     mbin = await self.bot.create_bin(code)
                     await ctx.send(f'**Eval was uploaded to `mystb.in`:**\n {mbin}')
                 else:

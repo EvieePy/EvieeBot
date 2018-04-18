@@ -37,7 +37,7 @@ from concurrent.futures import ThreadPoolExecutor
 import utils
 
 __all__ = ('EvieeContext', 'EvieeCommand', 'EvieeCommandGroup', 'AbstractorGroup', 'AbstractorCommand', 'Union',
-           'evieeloads', 'backoff_loop', 'get_dict', 'GuildConverter', 'MetaCog', 'evieecutor')
+           'evieeloads', 'backoff_loop', 'get_dict', 'GuildConverter', 'MetaCog', 'evieecutor', 'has_perms_or_dj')
 
 
 def get_dict(obj):
@@ -477,9 +477,10 @@ def backoff_loop(until_ready=True):
     return decorator
 
 
+# Custom Executor
 async def evieecutor(func, executor=None, loop=None, *args, **kwargs):
     if not executor:
-        executor = ThreadPoolExecutor(max_workers=2)
+        executor = ThreadPoolExecutor(max_workers=4)
 
     future = executor.submit(func, *args, **kwargs)
     future = asyncio.wrap_future(future)
@@ -488,6 +489,30 @@ async def evieecutor(func, executor=None, loop=None, *args, **kwargs):
     executor.shutdown(wait=False)
 
     return result
+
+
+# Checks
+def has_perms_or_dj(**perms):
+    def predicate(ctx):
+
+        try:
+            player = ctx.bot.get_cog('Music').controllers[ctx.guild.id]
+        except KeyError:
+            return False
+
+        if ctx.author.id == player.dj.id:
+            return True
+
+        ch = ctx.channel
+        permissions = ch.permissions_for(ctx.author)
+
+        missing = [perm for perm, value in perms.items() if getattr(permissions, perm, None) != value]
+
+        if not missing:
+            return True
+
+        raise commands.MissingPermissions(missing)
+    return commands.check(predicate)
 
 
 def setup(bot):

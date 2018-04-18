@@ -27,12 +27,35 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
             await ctx.send(f'You are only permitted to one Channel per 15m.\n```css\n'
                            f'Your cooldown expires in: [{error.retry_after / 60} minutes.]\n```')
 
+        elif isinstance(error, commands.BotMissingPermissions):
+            missing = ', '.join(error.missing_perms)
+            await ctx.send(f'I am missing permissions to run this command: ```css\n[{missing}]\n```')
+
     async def __local_check(self, ctx):
         if not ctx.guild:
             await ctx.send('You are not able to use this command in Private Messages.')
             return False
-
         return True
+
+    async def on_voice_state_update(self, mem, before, after):
+        if not after.channel:
+            return
+
+        async with self.bot.pool.acquire() as conn:
+            chan = await conn.fetchval("""SELECT autoroom FROM guilds WHERE guilds.id IN ($1)""", mem.guild.id)
+
+        if after.channel.id == chan:
+            async with self.bot.pool.acquire() as conn:
+                old = await conn.fetchval("""SELECT cid FROM tempchannels WHERE mid IN ($1)""", mem.id)
+            if old:
+                chan = self.bot.get_channel(old)
+                try:
+                    return await mem.move_to(chan)
+                except Exception:
+                    pass
+
+            chan = await self.generate_channel(mem.guild, mem, name=str(mem))
+            await mem.move_to(chan)
 
     @property
     def fb_chan(self):
@@ -44,7 +67,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
     @commands.command(name='emojis', aliases=['emotes'], cls=utils.EvieeCommandGroup)
     async def emojis_(self, ctx, *, name: str=None):
-        """Display all emojis in a paginated embed.
+        """Display all emojis I can see in a paginated embed.
 
         Aliases
         ---------
@@ -82,6 +105,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
     @commands.command(name='emoji', cls=utils.EvieeCommand)
     async def emoji(self, ctx, *, emoji: discord.Emoji):
+        """Retrieve information about an emoji I can see."""
         embed = discord.Embed(title=emoji.name, colour=0xEEEE00)
         embed.add_field(name='Guild', value=f'`{emoji.guild.name} (ID: {emoji.guild.id})`')
         embed.add_field(name='URL', value=f'[Open]({emoji.url})')
@@ -94,7 +118,61 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
         """Say hello to Eviee."""
         await ctx.send(f'{random.choice(self.hellos)} {ctx.author.display_name}! <:3cc:431696022461349888>')
 
-    async def auto_room(self):
+    @commands.command(name='autoroom', cls=utils.AbstractorGroup, abstractors=['add', 'remove'])
+    @commands.bot_has_permissions(manage_channels=True, move_members=True)
+    async def auto_room(self, ctx):
+        """Creates a Channel which creates Temp Channels when entered.
+
+        Examples
+        ----------
+        <prefix>autoroom add
+        <prefix>autoroom remove
+
+            {ctx.prefix}autoroom add
+            {ctx.prefix}add autoroom
+            {ctx.prefix}remove autoroom
+        """
+        await ctx.invoke(self.add_auto_room)
+
+    @auto_room.command(name='add')
+    @commands.bot_has_permissions(manage_channels=True, move_members=True)
+    async def add_auto_room(self, ctx):
+        """Creates an Auto Temp Room creator."""
+        try:
+            cat = discord.utils.get(ctx.guild.categories, name='TEMP CHANNELS')
+            if not cat:
+                cat = await ctx.guild.create_category(name='TEMP CHANNELS')
+
+            async with self.bot.pool.acquire() as conn:
+                chan = await conn.fetchval("""SELECT autoroom FROM guilds WHERE id IN ($1)""", ctx.guild.id)
+                chan = self.bot.get_channel(chan)
+
+            if chan:
+                return await ctx.send('Your guild already has an Auto Temp Room.')
+
+            chan = await ctx.guild.create_voice_channel(name='🎧 Auto Temp 🎧', overwrites={
+                ctx.guild.default_role: discord.PermissionOverwrite(mute_members=False,
+                                                                    deafen_members=False,
+                                                                    connect=True,
+                                                                    speak=False,
+                                                                    move_members=False,
+                                                                    manage_channels=False,
+                                                                    manage_roles=False),
+                ctx.guild.me: discord.PermissionOverwrite(move_members=True)},
+                                                        category=cat,
+                                                        reason='Auto Temp Channels.')
+        except discord.HTTPException:
+            return await ctx.send('Something went wrong while trying to create your channel. Please try again.')
+
+        async with self.bot.pool.acquire() as conn:
+            await conn.execute("""UPDATE guilds SET autoroom = $1 WHERE guilds.id IN ($2)""", chan.id, ctx.guild.id)
+
+        await ctx.send('Your Auto Room has been setup!')
+
+    @auto_room.command(name='remove')
+    @commands.bot_has_permissions(manage_channels=True, move_members=True)
+    async def remove_auto_room(self, ctx):
+        """N/A"""
         pass
 
     @commands.command(name='temp', aliases=['temp_channel'], cls=utils.EvieeCommand)
@@ -126,43 +204,42 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
             name = f"{ctx.author}'s-room"
 
         try:
-            cat = discord.utils.get(ctx.guild.categories, name='TEMP CHANNELS')
-            if not cat:
-                cat = await ctx.guild.create_category(name='TEMP CHANNELS')
-
-            chan = await ctx.guild.create_voice_channel(name=name,
-                                                        overwrites={
-                                                            ctx.author: discord.PermissionOverwrite(mute_members=True,
-                                                                                                    deafen_members=True,
-                                                                                                    connect=True,
-                                                                                                    speak=True,
-                                                                                                    move_members=True,
-                                                                                                    manage_channels=True,
-                                                                                                    manage_roles=True,
-                                                                                                    ),
-                                                            ctx.guild.default_role: discord.PermissionOverwrite(
-                                                                speak=False,
-                                                                connect=True
-                                                            )},
-                                                        category=cat,
-                                                        reason='Temp Channel.')
+            chan = await self.generate_channel(ctx.guild, ctx.author, name=name)
         except discord.HTTPException:
             return await ctx.send('Something went wrong while trying to create your channel. Please try again.')
 
-        await ctx.send(f'**Your channel has been created.**\nOther members may now join **`{chan}`**\n'
+        await ctx.send(f'**{ctx.author.mention}Your channel has been created.**\nOther members may now join **`{chan}`**\n'
                        f'```ini\nYour channel will be destroyed shortly after the channel becomes empty.\n'
                        f'You may change permissions, channel name and more while the channel is active.\n'
-                       f'By Default, `@everyone` are unable to speak.```',
+                       f'By Default, `@everyone` are able to speak.```',
                        delete_after=30)
 
-        async with self.bot.pool.acquire() as conn:
-            query = """INSERT INTO tempchannels(cid, gid, ts) VALUES($1, $2, $3)"""
-            await conn.execute(query, chan.id, ctx.guild.id, datetime.datetime.utcnow())
+    async def generate_channel(self, guild, mem, name=None):
+        cat = discord.utils.get(guild.categories, name='TEMP CHANNELS')
+        if not cat:
+            cat = await guild.create_category(name='TEMP CHANNELS')
 
-    @temp_chan.error
-    async def temp_chan_error(self, ctx, error):
-        if isinstance(error, commands.BotMissingPermissions):
-            await ctx.send('I am missing permissions: **`Manage Channels`**')
+        chan = await guild.create_voice_channel(name=name,
+                                                overwrites={
+                                                        mem: discord.PermissionOverwrite(mute_members=True,
+                                                                                         deafen_members=True,
+                                                                                         connect=True,
+                                                                                         speak=True,
+                                                                                         move_members=True,
+                                                                                         manage_channels=True,
+                                                                                         manage_roles=True,),
+                                                        guild.default_role: discord.PermissionOverwrite(
+                                                            speak=True,
+                                                            connect=True
+                                                        )},
+                                                category=cat,
+                                                reason='Temp Channel.')
+
+        async with self.bot.pool.acquire() as conn:
+            query = """INSERT INTO tempchannels(cid, gid, mid, ts) VALUES($1, $2, $3, $4)"""
+            await conn.execute(query, chan.id, guild.id, mem.id, datetime.datetime.utcnow())
+
+        return chan
 
     @utils.backoff_loop()
     async def temp_checker(self):
@@ -170,6 +247,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
         async with self.bot.pool.acquire() as conn:
             temps = await conn.fetch("""SELECT * FROM tempchannels""")
+            query = """DELETE FROM tempchannels WHERE tempchannels.cid IN ($1)"""
 
             for c in temps:
                 ts = c['ts']
@@ -181,10 +259,10 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
                 chan = self.bot.get_channel(c['cid'])
 
                 if not chan:
+                    await conn.execute(query, chan.id)
                     continue
 
                 if len(chan.members) == 0:
-                    query = """DELETE FROM tempchannels WHERE tempchannels.cid IN ($1)"""
                     await conn.execute(query, chan.id)
 
                     try:
@@ -283,6 +361,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
                     draw.text((170, 250), f'{b.display_name}', font=font, fill=self.hug_colour)
 
                     frames.append(frame.copy())
+                    del draw
 
         await utils.evieecutor(generate, None, loop=self.bot.loop)
 
@@ -308,9 +387,9 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
                         draw.fontmode = '1'
                         draw.text(((500 - w) / 2, (285 - h) / 2), msg, font=font, align='center', fill=99)
                         del draw
-
-                    frames.append(frame.copy())
                         
+                    frames.append(frame.copy())
+
         await utils.evieecutor(generate, None, loop=self.bot.loop)
 
         last_frame = frames[-1]
@@ -340,6 +419,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
                     draw.text(((730 - aw) / 2, 60), a.display_name, font=font, fill=99)
 
                     frames.append(frame.copy())
+                    del draw
 
         await utils.evieecutor(generate, None, loop=self.bot.loop)
 
@@ -370,6 +450,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
                         # draw.text(((500 - w) / 2, (285 - h) / 2), msg, font=font, align='center', fill=99)
 
                     frames.append(frame.copy())
+                    del draw
 
         await utils.evieecutor(generate, None, loop=self.bot.loop)
         last_frame = frames[-1]
@@ -399,6 +480,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
                     draw.text(((730 - aw) / 2, 70), a.display_name, font=font, fill=99)
 
                     frames.append(frame.copy())
+                    del draw
 
         await utils.evieecutor(generate, None, loop=self.bot.loop)
 
@@ -515,6 +597,10 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
         n = random.randint(1, 2)
         await ctx.send(file=await self._licks[f'lick{n}'](ctx.author, member))
+
+    @commands.command(name='dab', cls=utils.EvieeCommand)
+    async def do_dab(self, ctx):
+        await ctx.send('No.')
 
 
 class RPSLS(enum.Enum):
