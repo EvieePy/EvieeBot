@@ -399,6 +399,15 @@ async def shutdown(*, reason=None):
     print(f'{datetime.datetime.utcnow()} || UTC\n\nPython: {sys.version}\nPlatform: {sys.platform}/{os.name}\n'
           f'Discord: {discord.__version__}\n\n{"="*30}\n')
 
+    await asyncio.sleep(1)
+    sys.exit(0)
+
+
+@bot.command(name='restart', cls=utils.EvieeCommand)
+@commands.is_owner()
+async def do_restart(ctx):
+    raise KeyboardInterrupt
+
 
 def start():
     """Start and run the but, calling shutdown on exit."""
