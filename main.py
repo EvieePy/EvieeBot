@@ -406,6 +406,7 @@ async def shutdown(*, reason=None):
 @bot.command(name='restart', cls=utils.EvieeCommand)
 @commands.is_owner()
 async def do_restart(ctx):
+    await ctx.send(f'Ok {ctx.author.display_name}, be back soon!')
     raise KeyboardInterrupt
 
 
