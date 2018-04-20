@@ -47,14 +47,16 @@ from collections import deque
 import utils
 
 try:
-    import uvloop
+    pass
+    # import uvloop
 except ImportError:
     pass
 except AttributeError:
     # For 3.7 testing...
     pass
 else:
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    pass
+    # asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 finally:
     loop = asyncio.get_event_loop()
 
