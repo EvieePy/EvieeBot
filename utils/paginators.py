@@ -270,7 +270,7 @@ class HelpPaginator(SimplePaginator):
 
         self.pages.extend((first, howto, basecom))
 
-        for cog in valid_cogs:
+        for cog in sorted(valid_cogs):
             await self.command_formatter(ctx, cog)
 
         self.set_pages()

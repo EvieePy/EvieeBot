@@ -38,9 +38,9 @@ import utils
 class PlayerController:
 
     __slots__ = ('bot', '__vc', 'PLAYER', 'skips', 'pauses', 'resumes', 'shuffles', 'volume', 'eq', 'active_loads',
-                 'current_message', '_tasks', 'gid', 'last_seen', 'p1controls', 'p2controls', 'dj', 'reaction_task',
+                 'current_message', '_tasks', 'gid', 'last_seen', 'dj', 'reaction_task',
                  'restrictions', 'requested_loads', 'last_call', '_updates', 'state', 'repeats', 'after_state', 'me',
-                 'restricted', 'restricted_plus', 'current_extras', 'extras_reaction_task', '__dc')
+                 'restricted_plus', 'current_extras', 'extras_reaction_task', '__dc')
 
     IDLE = 0
     UPDATING = 1
@@ -60,7 +60,7 @@ class PlayerController:
                                         after_all=lambda e, t:
                                         bot.loop.call_soon_threadsafe(self.delegate_after_all, e, t),
                                         next_call=lambda n:
-                                        bot.loop.call_soon_threadsafe(self.delegate_next_call, n))
+                                        bot.loop.call_soon_threadsafe(self.next_call, n))
         self.__vc._player = self.PLAYER
 
         self.skips = set()
@@ -74,11 +74,9 @@ class PlayerController:
         self.eq = eaudio.EQS.FLAT
         self.current_message = None
         self.current_extras = None
+
         self.restrictions = eaudio.RestrictionStatus.open
-        self.restricted = ('connect', 'resume', 'skip', 'stop', 'volume', 'vol_down', 'vol_up', 'eq')
         self.restricted_plus = list(self.restricted).append('play')
-        self.p1controls = eaudio.PONE_CONTROLS
-        self.p2controls = eaudio.PTWO_CONTROLS
 
         self.active_loads = 0
         self.requested_loads = 0
@@ -97,6 +95,18 @@ class PlayerController:
             self._tasks[exc.__name__] = task
 
         self.PLAYER.do_start()
+
+    @property
+    def p1controls(self):
+        return eaudio.PONE_CONTROLS
+
+    @property
+    def p2controls(self):
+        return eaudio.PTWO_CONTROLS
+
+    @property
+    def restricted(self):
+        return 'connect', 'resume', 'skip', 'stop', 'volume', 'vol_down', 'vol_up', 'eq'
 
     async def destroy_controller(self, task, message):
         try:
@@ -154,11 +164,8 @@ class PlayerController:
         shutil.rmtree(f'./downloads/{gid}', ignore_errors=True)
         return excs
 
-    async def next_call(self, n):
+    def next_call(self, n):
         self.PLAYER.next = n
-
-    def delegate_next_call(self, n):
-        self.bot.loop.create_task(self.next_call(n))
 
     def after_call(self, error, old):
         self.after_state = True

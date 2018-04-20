@@ -132,6 +132,36 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
         await ctx.paginate(title=f'Prefixes for {ctx.guild.name}', entries=self.bot.lru_prefix[ctx.guild.id],
                            fmt='`"', footer='You may also mention me.')
 
+    @commands.command(name='ban', cls=utils.EvieeCommand)
+    @commands.bot_has_permissions(ban_members=True)
+    @commands.has_permissions(ban_members=True)
+    async def do_ban(self, ctx, member: discord.Member, *, reason: str=None):
+        """Ban a member from your guild.
+
+        Parameters
+        ------------
+        member: [Required]
+            The member you wish to ban. This could be either a name, mention or ID.
+
+        reason: str [Optional]
+            Provide a reason for banning the member.
+
+        Examples
+        ----------
+        <prefix>ban <member> <reason>
+
+            {ctx.prefix}ban Noob For being a noob.
+            {ctx.prefix}ban @Noob
+        """
+        dn = str(member)
+
+        try:
+            await ctx.guild.ban(member, reason=reason)
+        except discord.HTTPException:
+            return await ctx.send(f'Banning `{dn}` has failed. Please try again.')
+
+        await ctx.send(f'Successfully banned: **`{dn}`**')
+
     @commands.command(name='cleanup', cls=utils.EvieeCommand)
     @commands.has_permissions(manage_messages=True)
     async def do_cleanup(self, ctx, limit: int=20):
@@ -157,4 +187,13 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
     @do_cleanup.error
     async def do_cleanup_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
-            return await ctx.send('Manage Messages is required to run this command.')
+            await ctx.send('Manage Messages is required to run this command.')
+
+    @do_ban.error
+    async def do_ban_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send(f'{error}')
+        elif isinstance(error, commands.MissingPermissions):
+            await ctx.send('Ban Members is required to run this command.')
+        elif isinstance(error, commands.BotMissingPermissions):
+            await ctx.send('I require the Ban Members permission.')
