@@ -224,4 +224,9 @@ class Admin(metaclass=utils.MetaCog, private=True):
         out, err = await proc.communicate()
 
         data = '\n'.join(out.decode().split('\n'))
+
+        if len(data) > 1000:
+            bin_ = await self.bot.create_bin(data)
+            return await ctx.send(bin_)
+
         await ctx.send(f'```\n{data}\n```')
