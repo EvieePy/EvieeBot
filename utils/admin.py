@@ -6,6 +6,7 @@ import copy
 import datetime
 import inspect
 import io
+import subprocess
 import sys
 import textwrap
 import time
@@ -218,10 +219,9 @@ class Admin(metaclass=utils.MetaCog, private=True):
                     await ctx.send(f'```py\n{fmt}\n```')
 
     @commands.command(name='sp', cls=utils.EvieeCommand)
-    async def make_subprocess_call(self, ctx, *, cmd: str):
-        process = await asyncio.create_subprocess_exec(sys.executable, '-c', cmd, stdout=asyncio.subprocess.PIPE)
+    async def make_subprocess_call(self, ctx, *args):
+        proc = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
+        out, err = await proc.communicate()
 
-        out, error = await process.communicate()
-        result = out.decode().strip()
-
-        await ctx.send(result)
+        data = '\n'.join(out.decode().split('\n'))
+        await ctx.send(data)
