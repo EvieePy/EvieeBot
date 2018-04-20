@@ -6,6 +6,7 @@ import copy
 import datetime
 import inspect
 import io
+import sys
 import textwrap
 import time
 import traceback
@@ -215,3 +216,12 @@ class Admin(metaclass=utils.MetaCog, private=True):
                     await ctx.send(f'**Eval was uploaded to `mystb.in`:**\n {mbin}')
                 else:
                     await ctx.send(f'```py\n{fmt}\n```')
+
+    @commands.command(name='sp', cls=utils.EvieeCommand)
+    async def make_subprocess_call(self, ctx, *, cmd: str):
+        process = await asyncio.create_subprocess_exec(sys.executable, '-c', cmd, stdout=asyncio.subprocess.PIPE)
+
+        out, error = await process.communicate()
+        result = out.decode().strip()
+
+        await ctx.send(result)
