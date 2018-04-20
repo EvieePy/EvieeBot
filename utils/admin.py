@@ -224,4 +224,4 @@ class Admin(metaclass=utils.MetaCog, private=True):
         out, err = await proc.communicate()
 
         data = '\n'.join(out.decode().split('\n'))
-        await ctx.send(data)
+        await ctx.send(f'```\n{data}\n```')
