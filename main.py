@@ -186,7 +186,8 @@ class Botto(commands.Bot):
     async def load_modules(self):
         """Load our cogs.
 
-        This coroutine handles recursive directory checking for cogs and ignores everything else."""
+        This coroutine handles recursive directory checking for cogs and ignores everything else.
+        """
 
         # A bit messy(but hey it works)
         modules = [f'{p.parent}.{p.stem}' for p in pathlib.Path('.').rglob('*.py')
@@ -306,7 +307,7 @@ class Botto(commands.Bot):
         try:
             resp, respj = await self.aio('post', url='http://mystb.in/documents', return_attr='json', data=data)
         except Exception as e:
-            print(e)
+            return
 
         return f'http://mystb.in/{respj["key"]}'
 

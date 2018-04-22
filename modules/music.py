@@ -169,10 +169,6 @@ class PlayerController:
 
     def after_call(self, error, old):
         self.after_state = True
-        try:
-            old.cleanup()
-        except Exception:
-            pass
 
         self.skips.clear()
         self.pauses.clear()
@@ -982,47 +978,27 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
                            f' more votes needed!', delete_after=30)
 
     async def do_repeat(self, controller):
-        print('Repeat - 1')
         if controller.state > 0:
             return
-        print('Repeat - 2')
 
         controller.state = controller.SHUFFLING
         while controller.PLAYER.state == controller.PLAYER.MIXING:
-            await asyncio.sleep(.1)
+            await asyncio.sleep(0)
 
-        print('Repeat - 3')
+        try:
+            source = await eaudio.YTDLSource.copy_source(controller=controller, source=controller.PLAYER.previous)
+        except Exception as e:
+            print(e)
+            return
 
         if controller.PLAYER.next:
             controller.PLAYER.queue.queue.appendleft(controller.PLAYER.next)
 
-        print('Repeat - 4')
-
         if not controller.PLAYER.current:
-            to_get = getattr(controller.PLAYER, 'previous', None)
-        else:
-            to_get = getattr(controller.PLAYER, 'current', None)
-
-        print('Repeat - 5')
-
-        if not to_get:
-            return
-
-        print('Repeat - 6')
-
-        try:
-            source = await eaudio.YTDLSource.copy_source(controller=controller, source=to_get)
-        except Exception as e:
-            print(e)
-
-        print('Repeat - 7')
-
-        if not controller.PLAYER.current:
-            controller.PLAYER.current = source
+            controller.PLAYER.queue.put(source)
         else:
             controller.PLAYER.next = source
 
-        print('Repeat - 8')
         controller.state = controller.IDLE
         await self.attempt_update(controller, required=0)
 

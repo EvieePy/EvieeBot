@@ -171,9 +171,9 @@ class AudioMixer(AudioPlayer):
         self.next_loops += 1
 
         try:
-            self.current.volume = self.current.volume - (math.floor(10 / 50) / 100)
+            self.current.volume = self.current.volume - (math.floor(12 / 50) / 100)
             if self.next.volume < self.next_vol:
-                self.next.volume = self.next.volume + (self.next_vol / math.floor(10 * 50))
+                self.next.volume = self.next.volume + (self.next_vol / math.floor(12 * 50))
 
             print(f'MAX: {self.next_vol}')
 
@@ -186,9 +186,9 @@ class AudioMixer(AudioPlayer):
         except Exception as e:
             print(type(e))
             print(e)
-            # Load our current source into previous for cleaning.
-            self.previous = self.current
+
             self.current = self.next
+            self.previous = self.current
             # The next song will be grabbed on the next loop.
             self.next = None
 
@@ -213,10 +213,10 @@ class AudioMixer(AudioPlayer):
 
         if not self.next:
             pass
-        elif self.current.remaining == 12 and self.state != self.MIXING:
+        elif self.current.remaining == 16 and self.state != self.MIXING:
             self.state = self.MIXING
             self._next_call(self.next)
-        elif self.current.remaining <= 10:  # !15 for testing purposes.
+        elif self.current.remaining <= 12:  # !15 for testing purposes.
             data = self.mix_streams()
 
         # mix_streams could still return None, so an else here doesn't work
