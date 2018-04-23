@@ -55,7 +55,7 @@ class ErrorHandler(metaclass=utils.MetaCog, private=True):
         self.bot = bot
         self.debug = False
         self.lru_errors = utils.EvieeLRU(name='Errors', limit=10)
-        self.spam = commands.CooldownMapping(commands.Cooldown(5, 60, commands.BucketType.user))
+        self.spam = commands.CooldownMapping(commands.Cooldown(3, 60, commands.BucketType.user))
 
         self.counter_cmdf = 0
 

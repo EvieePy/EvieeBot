@@ -590,3 +590,22 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
 
         await ctx.send(content=f'```ini\nLatest RTT: [{self.bot._rtts[-1]}]ms\n```',
                        file=discord.File(pfile, 'rttping.png'))
+
+    async def on_message(self, msg):
+        if msg.author.bot:
+            return
+
+        async with self.bot.pool.acquire() as conn:
+            if msg.attachments:
+                if msg.attachments[0].filename.endswith(('jpg', 'png', 'gif')):
+                    attachment = msg.attachments[0]
+                else:
+                    attachment = 'OTHER'
+            else:
+                attachment = None
+
+            await conn.execute("""INSERT INTO messages(mid, aid, cid, gid, ts, content, attachment)
+                                  VALUES($1, $2, $3, $4, $5, $6, $7)""",
+                               msg.id, msg.author.id, msg.channel.id, msg.guild.id, msg.created_at, msg.content,
+                               attachment.url)
+
