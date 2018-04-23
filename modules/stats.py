@@ -595,15 +595,15 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         if msg.author.bot:
             return
 
-        async with self.bot.pool.acquire() as conn:
-            if msg.attachments:
-                if msg.attachments[0].filename.endswith(('jpg', 'png', 'gif')):
-                    attachment = msg.attachments[0]
-                else:
-                    attachment = 'OTHER'
+        if msg.attachments:
+            if msg.attachments[0].filename.endswith(('jpg', 'png', 'gif')):
+                attachment = msg.attachments[0]
             else:
-                attachment = None
+                attachment = 'OTHER'
+        else:
+            attachment = None
 
+        async with self.bot.pool.acquire() as conn:
             await conn.execute("""INSERT INTO messages(mid, aid, cid, gid, ts, content, attachment)
                                   VALUES($1, $2, $3, $4, $5, $6, $7)""",
                                msg.id, msg.author.id, msg.channel.id, msg.guild.id, msg.created_at, msg.content,
