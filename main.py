@@ -422,7 +422,7 @@ def start():
     try:
         loop.run_until_complete(bot.async_init())
     except utils.StartupFailure as e:
-        return loop.run_until_complete(shutdown(reason=type(e).__name__))
+        return loop.run_until_complete(shutdown(reason=e))
 
     try:
         loop.run_until_complete(bot.start(config.get('TOKEN', '_tokenT')))

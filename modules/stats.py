@@ -312,13 +312,6 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         pages = await self.get_perms(ctx, target=target)
         await ctx.paginate(extras=pages)
 
-
-class Plots(metaclass=utils.MetaCog):
-    """Commands which make graphs and other pretties."""
-
-    def __init__(self, bot):
-        self.bot = bot
-
     def pager(self, entries, chunk: int):
         for x in range(0, len(entries), chunk):
             yield entries[x:x + chunk]
