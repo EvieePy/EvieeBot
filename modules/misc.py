@@ -3,9 +3,29 @@ from discord.ext import commands
 
 import asyncio
 import datetime
+import functools
+import io
 import random
+import youtube_dl
 
 import utils
+
+ytopts = {
+    'format': 'bestaudio/best',
+    'maxfilesize': '25m',
+    'outtmpl': f'%(extractor)s_%(title)s%(id)s.%(ext)s',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': True,
+    'logtostderr': True,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0',
+}
+
+ytdl = youtube_dl.YoutubeDL(ytopts)
 
 
 class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail='https://i.imgur.com/WGjcdqg.png'):
@@ -323,6 +343,49 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
         resp, cont = await self.bot.aio(method='get', url=f'http://tinyurl.com/api-create.php?url={link}',
                                         return_attr='text')
         await ctx.send(f'<{cont}>')
+
+    @commands.command(name='getsong', aliases=['song_download', 'downloadsong'], cls=utils.EvieeCommand)
+    async def download_ytaudio(self, ctx, *, search: str):
+        """Downloads a song from YouTube and sends it back to the user.
+
+        Parameters
+        ------------
+        search: [Required]
+            The song you would like to download. This could be URL, Youtube ID or simple search.
+
+        Examples
+        ----------
+        <prefix>getsong <search>
+
+            {ctx.prefix}getsong Never gonna give you up.
+        """
+        # todo Filter non YouTube stuff.
+        # todo Better error handling on large files.
+
+        msg = await ctx.send('Attempting to retrieve your song.')
+
+        to_do = functools.partial(ytdl.extract_info, url=search, download=False)
+        data = await utils.evieecutor(to_do, loop=self.bot.loop)
+
+        if 'entries' in data:
+            data = data['entries'][0]
+
+        f = io.BytesIO()
+
+        async with self.bot.session.get(data['url']) as resp:
+            f.write(await resp.content.read())
+
+        f.seek(0)
+
+        try:
+            await ctx.send(content=None, file=discord.File(f, filename=f'{data["title"]}.{data["ext"]}'))
+        except discord.HTTPException as e:
+            await ctx.send(f'There was an error processing your song.\n```css\n[{e}\n```]')
+
+        try:
+            await msg.delete()
+        except discord.HTTPException:
+            pass
 
 
 class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lvQq.png'):
