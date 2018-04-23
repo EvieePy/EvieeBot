@@ -364,23 +364,24 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
         msg = await ctx.send('Attempting to retrieve your song.')
 
-        to_do = functools.partial(ytdl.extract_info, url=search, download=False)
-        data = await utils.evieecutor(to_do, loop=self.bot.loop)
+        async with ctx.typing():
+            to_do = functools.partial(ytdl.extract_info, url=search, download=False)
+            data = await utils.evieecutor(to_do, loop=self.bot.loop)
 
-        if 'entries' in data:
-            data = data['entries'][0]
+            if 'entries' in data:
+                data = data['entries'][0]
 
-        f = io.BytesIO()
+            f = io.BytesIO()
 
-        async with self.bot.session.get(data['url']) as resp:
-            f.write(await resp.content.read())
+            async with self.bot.session.get(data['url']) as resp:
+                f.write(await resp.content.read())
 
-        f.seek(0)
+            f.seek(0)
 
-        try:
-            await ctx.send(content=None, file=discord.File(f, filename=f'{data["title"]}.{data["ext"]}'))
-        except discord.HTTPException as e:
-            await ctx.send(f'There was an error processing your song.\n```css\n[{e}\n```]')
+            try:
+                await ctx.send(content=None, file=discord.File(f, filename=f'{data["title"]}.{data["ext"]}'))
+            except discord.HTTPException as e:
+                await ctx.send(f'There was an error processing your song.\n```css\n[{e}\n```]')
 
         try:
             await msg.delete()
