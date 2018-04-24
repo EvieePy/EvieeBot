@@ -4,28 +4,26 @@ from discord.ext import commands
 import asyncio
 import datetime
 import functools
-import io
+import os
 import random
 import youtube_dl
 
 import utils
 
-ytopts = {
+ytdlopts = {
     'format': 'bestaudio/best',
-    'maxfilesize': '25m',
-    'outtmpl': f'%(extractor)s_%(title)s%(id)s.%(ext)s',
     'restrictfilenames': True,
     'noplaylist': True,
     'nocheckcertificate': True,
-    'ignoreerrors': True,
-    'logtostderr': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
-    'source_address': '0.0.0.0',
+    'source_address': '0.0.0.0'  # ipv6 addresses cause issues sometimes
 }
 
-ytdl = youtube_dl.YoutubeDL(ytopts)
+ytdl = youtube_dl.YoutubeDL(ytdlopts)
 
 
 class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail='https://i.imgur.com/WGjcdqg.png'):
@@ -364,29 +362,32 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
         msg = await ctx.send('Attempting to retrieve your song.')
 
+        try:
+            await self.retrieve_song(ctx, search)
+        except Exception as e:
+            await ctx.send(f'There was an error retrieving your song:\n```css\n[{e}]\n```')
+
+        try:
+            await msg.delete()
+        except discord.HTTPException:
+            pass
+
+    async def retrieve_song(self, ctx, search):
         async with ctx.typing():
-            to_do = functools.partial(ytdl.extract_info, url=search, download=False)
+            to_do = functools.partial(ytdl.extract_info, url=search, download=True)
             data = await utils.evieecutor(to_do, loop=self.bot.loop)
 
             if 'entries' in data:
                 data = data['entries'][0]
 
-            f = io.BytesIO()
-
-            async with self.bot.session.get(data['url']) as resp:
-                f.write(await resp.content.read())
-
-            f.seek(0)
+            f = ytdl.prepare_filename(data)
 
             try:
                 await ctx.send(content=None, file=discord.File(f, filename=f'{data["title"]}.{data["ext"]}'))
             except discord.HTTPException as e:
                 await ctx.send(f'There was an error processing your song.\n```css\n[{e}\n```]')
 
-        try:
-            await msg.delete()
-        except discord.HTTPException:
-            pass
+            os.remove(f)
 
 
 class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lvQq.png'):
