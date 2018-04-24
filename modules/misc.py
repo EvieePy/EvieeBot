@@ -385,7 +385,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
             try:
                 await ctx.send(content=None, file=discord.File(f, filename=f'{data["title"]}.{data["ext"]}'))
             except discord.HTTPException as e:
-                await ctx.send(f'There was an error processing your song.\n```css\n[{e}\n```]')
+                await ctx.send(f'There was an error processing your song.\n```css\n[{e}]\n```')
 
             os.remove(f)
 
