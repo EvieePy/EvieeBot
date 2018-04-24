@@ -513,6 +513,9 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             await ctx.delete_supress()
 
     async def on_voice_state_update(self, member, before, after):
+        if member.bot:
+            return
+
         if not member.guild.voice_client:
             return
 
@@ -536,7 +539,12 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         if (len(vcm) - 1) <= 0:
             controller.last_seen = time.time()
         elif controller.dj not in vcm:
-            controller.dj = vcm[0]
+            for mem in vcm:
+                if mem.bot:
+                    continue
+                else:
+                    controller.dj = mem
+                    break
 
     async def __local_check(self, ctx):
         if ctx.invoked_with == 'help':
