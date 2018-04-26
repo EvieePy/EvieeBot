@@ -600,7 +600,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
             if msg.attachments[0].filename.endswith(('jpg', 'png', 'gif')):
                 attachment = msg.attachments[0].url
             else:
-                attachment = 'OTHER'
+                attachment = None
         else:
             attachment = None
 

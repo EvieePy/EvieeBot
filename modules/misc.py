@@ -389,6 +389,45 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
             os.remove(f)
 
+    @commands.command(name='quote', cls=utils.EvieeCommand)
+    async def get_quote(self, ctx, *, mid: int):
+        """Retrieve a message from your guild and quote it.
+
+        Parameters
+        ------------
+        mid: [Required]
+            The message ID to quote. This must be a valid message ID.
+            You can retrieve IDs by turning developer mode on and right clicking on the message.
+
+        Examples
+        ----------
+        <prefix>quote <mid>
+
+            {ctx.prefix}quote 439045167790686208
+        """
+        async with self.bot.pool.acquire() as conn:
+            msg = await conn.fetch("""SELECT * FROM messages WHERE mid IN($1)""", mid)
+
+        if not msg:
+            return await ctx.send('I could not find this message.')
+
+        msg = msg[0]
+
+        member = ctx.guild.get_member(msg['aid'])
+        if not member:
+            return await ctx.send('You may only quote messages from this server. Please try again!')
+
+        embed = discord.Embed(title=str(member), description=msg['content'], colour=0x36393E)
+        embed.set_thumbnail(url=member.avatar_url)
+
+        attachment = msg['attachment']
+        if attachment:
+            embed.set_image(url=attachment)
+
+        embed.set_footer(text=f'Sent in #{ctx.guild.get_channel(msg["cid"])} @ {msg["ts"]}')
+
+        await ctx.send(embed=embed)
+
 
 class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lvQq.png'):
     """Commands which help you understand this cruel world and its surrounds better.
