@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+import asyncio
 import datetime
 import functools
 import itertools
@@ -597,15 +598,25 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
 
         if msg.attachments:
             if msg.attachments[0].filename.endswith(('jpg', 'png', 'gif')):
-                attachment = msg.attachments[0]
+                attachment = msg.attachments[0].url
             else:
                 attachment = 'OTHER'
         else:
             attachment = None
 
+        expiry = datetime.datetime.utcnow() + datetime.timedelta(days=30)
+
         async with self.bot.pool.acquire() as conn:
-            await conn.execute("""INSERT INTO messages(mid, aid, cid, gid, ts, content, attachment)
-                                  VALUES($1, $2, $3, $4, $5, $6, $7)""",
+            await conn.execute("""INSERT INTO messages(mid, aid, cid, gid, ts, content, attachment, expiry)
+                                  VALUES($1, $2, $3, $4, $5, $6, $7, $8)""",
                                msg.id, msg.author.id, msg.channel.id, msg.guild.id, msg.created_at, msg.content,
-                               attachment.url)
+                               attachment, expiry)
+
+    @utils.backoff_loop
+    async def expiry_check(self):
+        async with self.bot.pool.acquire() as conn:
+            await conn.execute("""DELETE FROM messages WHERE now() >= messages.expiry""")
+
+        await asyncio.sleep(10300)
+
 
