@@ -412,7 +412,15 @@ async def shutdown(*, reason=None):
 @bot.command(name='restart', cls=utils.EvieeCommand)
 @commands.is_owner()
 async def do_restart(ctx):
-    await ctx.send(f'Ok {ctx.author.display_name}, be back soon!')
+    cog = bot.get_cog('Music')
+    msg = None
+
+    while cog.controllers:
+        if not msg:
+            msg = await ctx.send('Waiting for controllers to die...')
+        await asyncio.sleep(10)
+
+    await ctx.send(f'Ok {ctx.author.display_name}, everything is clear! Be back soon...')
     raise KeyboardInterrupt
 
 

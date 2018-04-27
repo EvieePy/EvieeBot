@@ -604,7 +604,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         else:
             attachment = None
 
-        expiry = datetime.datetime.utcnow() + datetime.timedelta(days=30)
+        expiry = datetime.datetime.utcnow() + datetime.timedelta(days=14)
 
         async with self.bot.pool.acquire() as conn:
             await conn.execute("""INSERT INTO messages(mid, aid, cid, gid, ts, content, attachment, expiry)
