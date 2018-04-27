@@ -420,7 +420,7 @@ async def do_restart(ctx):
             msg = await ctx.send('Waiting for controllers to die...')
         await asyncio.sleep(10)
 
-    await ctx.send(f'Ok {ctx.author.display_name}, everything is clear! Be back soon...')
+    await ctx.send(f'Ok {ctx.author.mention}, everything is clear! Be back soon...')
     raise KeyboardInterrupt
 
 
