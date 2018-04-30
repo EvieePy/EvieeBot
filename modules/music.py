@@ -127,8 +127,9 @@ class PlayerController:
                 continue
 
             current = time.time()
-            if current - self.last_seen >= 600:
-                self.PLAYER.stop()
+            if current - self.last_seen >= 300:
+                self.bot.loop.create_task(self.after_all_call(
+                    (self.PLAYER.current, self.PLAYER.next, self.PLAYER.previous)))
 
     async def updater_task(self):
         while not self.bot.is_closed():
@@ -137,7 +138,7 @@ class PlayerController:
             elif self._updates > 0:
                 self.bot.loop.create_task(self.message_controller())
 
-            await asyncio.sleep(10)
+            await asyncio.sleep(5)
 
     def is_safe(self):
         if self.active_loads > 0:
@@ -198,15 +199,15 @@ class PlayerController:
                 pass
 
         try:
-            del self.bot.get_cog('Music').controllers[self.gid]
-        except Exception:
-            pass
-
-        try:
             to_run = partial(self.cleanup, old, gid=self.gid)
             excs = await utils.evieecutor(func=to_run, executor=None, loop=self.bot.loop)
         except Exception as e:
             print(e)
+
+        try:
+            del self.bot.get_cog('Music').controllers[self.gid]
+        except Exception:
+            pass
 
     def delegate_after_all(self, error, o):
         self.bot.loop.create_task(self.after_all_call(o))
@@ -1253,12 +1254,17 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
                 _next = await eaudio.YTDLSource.copy_source(controller, controller.PLAYER.next)
                 controller.PLAYER.next.cleanup()
                 controller.PLAYER.next = _next
+
             controller.PLAYER.current.cleanup()
             source.frames = controller.PLAYER.current.frames
             controller.PLAYER.current = source
             controller.PLAYER.resume()
 
             await self.attempt_update(controller, required=0)
+
+    @commands.command(name='playlist', cls=utils.AbstractorGroup, abstractors=['list', 'add', 'remove'])
+    async def playlists(self, ctx):
+        pass
 
     @commands.command(name='dj', cls=utils.AbstractorGroup, aliases=['force'], abstractors=['new'])
     async def _dj(self, ctx):

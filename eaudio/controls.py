@@ -39,7 +39,8 @@ PONE_CONTROLS = {'⏯': 'rp',
                  '🔂': 'repeat',
                  '➕': 'vol_up',
                  '➖': 'vol_down',
-                 'ℹ': 'queue'}
+                 'ℹ': 'queue',
+                 '💟': 'playlist add'}
 
 # '🔣': 'extras'
 
