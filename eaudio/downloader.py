@@ -63,6 +63,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         self._original = data.get('_original', None)
         self.title = data.get('title')
         self.web_url = data.get('webpage_url')
+        self.id = data.get('id')
 
         # YTDL info dicts (data) have other useful information you might want
         # https://github.com/rg3/youtube-dl/blob/master/README.md

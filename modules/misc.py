@@ -31,10 +31,12 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
      I need a tequila.
      """
 
-    __slots__ = ('bot', )
+    __slots__ = ('bot', 'omdb')
 
     def __init__(self, bot):
         self.bot = bot
+        self.omdb = bot._config.get('OMDB', '_token')
+
         bot.loop.create_task(self.temp_checker())
 
     async def __error(self, ctx, error):
@@ -428,6 +430,64 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
         await ctx.send(embed=embed)
 
+    @commands.command(name='movie', aliases=['omdb'], cls=utils.EvieeCommand)
+    async def get_movie(self, ctx, *, search: str):
+        # TODO Fix
+
+        resp, cont = await self.bot.aio(url=f'http://www.omdbapi.com/?apikey={self.omdb}&t={search}&r=json',
+                                        return_attr='json', method='get')
+
+        print(cont)
+
+        if cont['Response'] == 'False':
+            return await ctx.send(f'I could not find a movie matching: `{search}`')
+
+        embed = discord.Embed(title=cont['Title'], description=cont['Plot'], colour=0xF3CE13)
+        embed.set_thumbnail(url='https://i.imgur.com/gbuXLtz.png')
+        embed.set_image(url=cont['Poster'])
+
+        embed.add_field(name='Released', value=cont['Released'])
+        embed.add_field(name='Rating', value=cont['Rated'])
+        embed.add_field(name='Director', value=cont['Director'])
+        embed.add_field(name='Runtime', value=cont['Runtime'])
+
+        stars = '\n'.join(cont['Actors'].split(', '))
+        embed.add_field(name='Starring', value=stars)
+
+        embed.add_field(name='Critics', value=f'Metascore - **`{cont["Metascore"]}`**\n'
+                                              f'IMDb          - **`{cont["imdbRating"]}`**')
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name='decrypt', invoke_without_command=True, cls=utils.EvieeCommandGroup)
+    async def decrypters(self, ctx):
+        """Decryption commands."""
+        pass
+
+    @decrypters.command(name='binary', aliases=['b1nary', '0101', '01'])
+    async def decrpyt_binary(self, ctx, *, inp: str):
+        """Decrypt binary
+
+        Parameters
+        ------------
+        input: [Required]
+            The binary input to decrypt.
+
+        Examples
+        ----------
+        <prefix>decrypt binary <input>
+
+            {ctx.prefix}decrypt binary 01000101 01110110 01101001 01100101 01100101
+        """
+        inp = inp.replace(' ', '')
+
+        try:
+            out = ''.join(chr(int(inp[i * 8:i * 8 + 8], 2)) for i in range(len(inp) // 8))
+        except Exception:
+            return await ctx.send('**This is not binary!**')
+
+        return await ctx.send(out)
+
 
 class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lvQq.png'):
     """Commands which help you understand this cruel world and its surrounds better.
@@ -441,6 +501,10 @@ class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lv
     @property
     def weather_key(self):
         return self.bot._config.get('WEATHER', '_token')
+
+    @property
+    def nasa_key(self):
+        return self.bot._config.get('NASA', '_token')
 
     @commands.command(name='weather', cls=utils.EvieeCommand)
     async def get_weather(self, ctx, *, location: str=None):
@@ -492,3 +556,74 @@ class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lv
         embed.set_footer(text=f'Local Time: {loc["localtime"]}')
 
         await ctx.send(embed=embed)
+
+    @commands.command(name='apod', aliases=['iotd'], cls=utils.EvieeCommand)
+    async def nasa_apod(self, ctx):
+        """Returns NASA's Astronomy Picture of the day.
+
+        Examples
+        ----------
+        <prefix>apod
+
+            {ctx.prefix}apod
+        """
+        url = f'https://api.nasa.gov/planetary/apod?api_key={self.nasa_key}'
+
+        try:
+            resp, cont = await self.bot.aio(method='get', url=url, return_attr='json')
+        except Exception as e:
+            return await ctx.send(f'There was an error processing APOD.\n```css\n[{e}]\n```')
+
+        embed = discord.Embed(title='Astronomy Picture of the Day', description=f'**{cont["title"]}** | {cont["date"]}')
+        embed.add_field(name='Explanation', value=cont['explanation'], inline=False)
+
+        img = cont["url"]
+        if not img.endswith(('gif', 'png', 'jpg')):
+            embed.add_field(name='Watch', value=f"[Click Me](http:{cont['url']})")
+        else:
+            embed.set_image(url=cont['url'])
+
+        try:
+            embed.add_field(name='HD Download', value=f'[Click here!]({cont["hdurl"]})')
+        except KeyError:
+            pass
+
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.set_footer(text='Generated ')
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name='epic', aliases=['EPIC'], cls=utils.EvieeCommand)
+    async def nasa_epic(self, ctx):
+        """Returns NASA's most recent EPIC image.
+
+        Examples
+        ---------
+        <prefix>epic
+
+            {ctx.prefix}epic
+        """
+        # todo Add the ability to select a date.
+        base = f'https://api.nasa.gov/EPIC/api/natural?api_key={self.nasa_key}'
+        img_base = 'https://epic.gsfc.nasa.gov/archive/natural/{}/png/{}.png'
+
+        try:
+            rep, cont = await self.bot.aio(method='get', url=base, return_attr='json')
+        except Exception as e:
+            return await ctx.send(f'There was an error processing your EPIC request.\n```css\n[{e}]\n```')
+
+        img = random.choice(cont)
+        coords = img['centroid_coordinates']
+
+        embed = discord.Embed(title='NASA EPIC', description=f'{img["caption"]}', colour=0x1d2951)
+        embed.set_image(url=img_base.format(img['date'].split(' ')[0].replace('-', '/'), img['image']))
+        embed.add_field(name='Centroid Coordinates',
+                        value=f'Lat: {coords["lat"]} | Lon: {coords["lon"]}')
+        embed.add_field(name='Download',
+                        value=f"[Click Me]({img_base.format(img['date'].split(' ')[0].replace('-', '/'), img['image'])})")
+
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.set_footer(text='Generated on ')
+
+        await ctx.send(embed=embed)
+

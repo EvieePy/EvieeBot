@@ -44,7 +44,8 @@ class EvieeBed(discord.Embed):
 class SimplePaginator:
 
     __slots__ = ('entries', 'extras', 'title', 'description', 'colour', 'footer', 'length', 'prepend', 'append',
-                 'fmt', 'timeout', 'ordered', 'controls', 'controller', 'pages', 'current', 'previous', 'eof', 'base')
+                 'fmt', 'timeout', 'ordered', 'controls', 'controller', 'pages', 'current', 'previous', 'eof', 'base',
+                 'names')
 
     def __init__(self, **kwargs):
         self.entries = kwargs.get('entries', None)
@@ -64,6 +65,7 @@ class SimplePaginator:
 
         self.controller = None
         self.pages = []
+        self.names = []
         self.base = None
 
         self.current = 0
@@ -175,6 +177,8 @@ class HelpPaginator(SimplePaginator):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.controls['🔢'] = 'selector'
+        self.timeout = 180
 
     @property
     def invalid_cogs(self):
@@ -193,6 +197,59 @@ class HelpPaginator(SimplePaginator):
         for index, embed in enumerate(self.pages):
             embed.set_footer(text=f'Page {index + 1}/{length} | Base commands are displayed in < >')
 
+        for index, name in enumerate(self.names):
+            self.names[index] = f'{index + 1} - `{name}`'
+
+    async def del_msg(self, *args):
+        for msg in args:
+            try:
+                await msg.delete()
+            except discord.HTTPException:
+                return
+
+    async def wait_for(self, ctx):
+        def check(m):
+            return m.author == ctx.author
+
+        msg = await ctx.send('What page would you like to goto?:')
+
+        while True:
+            try:
+                resp = await ctx.bot.wait_for('message', check=check, timeout=60)
+            except asyncio.TimeoutError:
+                return await self.del_msg(msg)
+
+            try:
+                index = int(resp.content)
+            except ValueError:
+                await ctx.send('Invalid number, please enter a valid page number.', delete_after=10)
+                await self.del_msg(resp)
+                continue
+
+            if index > len(self.pages) or index < 1:
+                await ctx.send('Invalid number, please enter a valid page number.', delete_after=10)
+                await self.del_msg(resp)
+            else:
+                await self.del_msg(msg, resp)
+                self.previous = self.current
+                self.current = index - 1
+                try:
+                    return await self.base.edit(embed=self.pages[self.current])
+                except KeyError:
+                    pass
+
+    async def indexer(self, ctx, ctrl):
+        if ctrl == 'stop':
+            ctx.bot.loop.create_task(self.stop_controller(self.base))
+        elif ctrl == 'selector':
+            ctx.bot.loop.create_task(self.wait_for(ctx))
+        elif isinstance(ctrl, int):
+            self.current += ctrl
+            if self.current > self.eof or self.current < 0:
+                self.current -= ctrl
+        else:
+            self.current = int(ctrl)
+
     async def command_formatter(self, ctx, _cog):
         cog = ctx.bot.get_cog(_cog)
 
@@ -200,6 +257,7 @@ class HelpPaginator(SimplePaginator):
             return
 
         embed = self.get_embed(_cog, cog)
+        self.names.append(_cog)
 
         for index, command in enumerate(sorted(ctx.bot.get_cog_commands(_cog), key=lambda c: c.name)):
             if command.hidden:
@@ -212,9 +270,10 @@ class HelpPaginator(SimplePaginator):
 
             short = inspect.cleandoc(command.short_doc) if command.short_doc else 'No help!'
 
-            if (index + 1) % 9 == 0:
+            if (index + 1) % 8 == 0:
                 self.pages.append(embed)
                 embed = self.get_embed(_cog, cog)
+                self.names.append(_cog)
 
             if isinstance(command, utils.AbstractorGroup):
                 abstractors = ', '.join(sorted(command.abstractors))
@@ -233,18 +292,17 @@ class HelpPaginator(SimplePaginator):
     async def paginate(self, ctx):
         valid_cogs = [cog for cog in ctx.bot.cogs if ctx.bot.get_cog_commands(cog) and cog not in self.invalid_cogs]
 
-        first = discord.Embed(title='Eviee - Help',
-                              description='For more help and resources visit:\n\n'
-                                          '[Official Server](http://discord.gg/Hw7RTtr)\n\n'
-                                          f'Only commands which are valid for {ctx.author.mention} will be shown.',
-                              colour=0xffb2b2)
+        first = discord.Embed(title='Eviee - Help', description=
+                                    'For more help and resources visit:\n\n'
+                                    '[Official Server](http://discord.gg/Hw7RTtr)\n\n', colour=0xffb2b2)
 
         howto = discord.Embed(title='Help - How-to',
                               description='⏮ - `To beginning`:\n'
                                           '◀ - `Page left`:\n'
                                           '⏹ - `Close`:\n'
                                           '▶ - `Page right`:\n'
-                                          '⏭ - `To End`:\n\n',
+                                          '⏭ - `To End`:\n'
+                                          '🔢 - `Page Selector`:\n\n',
                               colour=0xffb2b2)
         howto.add_field(name='Additional Info:', value='For additional info on how to use a specific command,'
                                                        ' use:\n\n'
@@ -266,14 +324,24 @@ class HelpPaginator(SimplePaginator):
 
         first.set_thumbnail(url=ctx.bot.user.avatar_url)
         basecom.set_thumbnail(url='https://i.imgur.com/E0ewLAN.png')
-        howto.set_thumbnail(url='https://i.imgur.com/VwIZHsg.png')
+        howto.set_thumbnail(url='https://i.imgur.com/QwvPYWr.png')
 
         self.pages.extend((first, howto, basecom))
+        self.names.extend(('Intro', 'Howto', 'Base Commands'))
 
         for cog in sorted(valid_cogs):
             await self.command_formatter(ctx, cog)
 
         self.set_pages()
+        cats = [c async for c in pager(self.names, int(len(self.names) / 2))]
+
+        for n in cats:
+            joined = '\n'.join(n)
+            self.pages[0].add_field(name='\u200b', value=joined)
+
+        self.pages[0].add_field(name='\u200b',
+                                value=f'Only commands which are valid for {ctx.author.mention} will be shown.\n')
+
         self.eof = float(len(self.pages) - 1)
         self.controls['⏭'] = self.eof
         self.controller = ctx.bot.loop.create_task(self.reaction_controller(ctx))

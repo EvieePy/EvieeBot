@@ -584,14 +584,20 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             return False
         return True
 
+    async def get_playlist(self, ctx):
+        async with self.bot.pool.acquire() as conn:
+            plist = await conn.fetch("""SELECT song_id, song_name FROM playlists WHERE uid IN($1)""", ctx.author.id)
+
+        return plist
+
     @commands.command(name='reactcontrol', cls=utils.EvieeCommand, hidden=True)
     async def react_control(self, ctx):
         """Dummy command for error handling in our player."""
         pass
 
-    @commands.command(name='play', aliases=['sing'], cls=utils.EvieeCommand)
+    @commands.command(name='play', aliases=['sing'], cls=utils.EvieeCommandGroup)
     async def music_play(self, ctx, *, search: str):
-        """Search for and add a song to the queue for playback.
+        """Search for and add a song to the queue for playback, or play your playlist.
 
         Aliases
         ---------
@@ -660,6 +666,71 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
                 await controller.message_controller(source)
             except Exception as e:
                 print(e)
+
+    @music_play.command(name='playlist')
+    @commands.cooldown(1, 600, commands.BucketType.user)
+    async def play_playlist(self, ctx):
+        plist = await self.get_playlist(ctx)
+
+        if not plist:
+            return await ctx.send(f'{ctx.author.mention}, you do not currently have any songs in your Playlist.')
+
+        await self._del_msg(ctx)
+
+        vc = ctx.voice_client
+        if vc is None:
+            try:
+                await ctx.invoke(self.connect_)
+            except Exception:
+                return
+        else:
+            if ctx.author not in vc.channel.members:
+                return await ctx.send(f'You must be in **{vc.channel}** to request songs.', delete_after=30)
+
+        await ctx.send(f'Alright {ctx.author.mention}, adding {len(plist)} songs from your playlist to the queue.',
+                       delete_after=30)
+        controller = self.get_controller(ctx)
+
+        for s in plist:
+            controller.active_loads += 1
+            try:
+                source = await eaudio.YTDLSource.create_source(ctx=ctx, search=s['song_id'], loop=self.bot.loop,
+                                                               volume=controller.volume)
+            except Exception as e:
+                print(e)
+                source = None
+                exc = e
+            finally:
+                controller.active_loads -= 1
+
+            if not source:
+                await ctx.send(f'There was an error while retrieving your song:\n```css\n[{exc}]\n```')
+                continue
+
+            controller.PLAYER.queue.put(source, block=False)
+            await asyncio.sleep(1)
+
+            if not controller.is_safe():
+                return
+            if controller.PLAYER.current:
+                try:
+                    await controller.message_controller()
+                except Exception as e:
+                    print(e)
+            else:
+                try:
+                    await controller.message_controller(source)
+                except Exception as e:
+                    print(e)
+
+    @play_playlist.error
+    async def play_playlist_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            m, s = divmod(int(error.retry_after), 60)
+            h, m = divmod(m, 60)
+
+            await ctx.send(f'{ctx.author.mention} to avoid spam this command can only be used once every 10 minutes.\n'
+                           f'```css\nTIME REMAINING:  [{m:02d} minutes]\n```', delete_after=30)
 
     @commands.command(name='connect', aliases=['join'])
     async def connect_(self, ctx, *, channel: discord.VoiceChannel=None):
@@ -1262,9 +1333,58 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
             await self.attempt_update(controller, required=0)
 
-    @commands.command(name='playlist', cls=utils.AbstractorGroup, abstractors=['list', 'add', 'remove'])
-    async def playlists(self, ctx):
-        pass
+    @commands.command(name='playlist', cls=utils.EvieeCommandGroup)
+    async def playlist_(self, ctx):
+        """View and edit your own personal playlist.
+
+        Sub-Commands
+        --------------
+            add
+            list
+
+        Examples
+        ----------
+        <prefix>playlist
+        <prefix>playlist <subcommand>
+
+            {ctx.prefix}playlist
+            {ctx.prefix}playlist add
+        """
+        await ctx.invoke(self.list_playlist)
+
+    @playlist_.command(name='add')
+    async def playlist_add(self, ctx):
+        vc = ctx.guild.voice_client
+        if not vc:
+            return
+
+        player = self.get_controller(ctx).PLAYER
+
+        if not player.current and not player.previous:
+            return await ctx.send('I am not currently playing anything.')
+
+        song = player.current or player.previous
+
+        async with self.bot.pool.acquire() as conn:
+            async with conn.transaction():
+                try:
+                    await conn.execute("""INSERT INTO playlists(uid, combined, song_id, song_name)
+                                          VALUES($1, $2, $3, $4)""",
+                                       ctx.author.id, f'{ctx.author.id}{song.id}', song.id, song.title)
+                except Exception:
+                    return await ctx.send(f'{ctx.author.mention}. This song is already in your playlist!')
+                else:
+                    return await ctx.send(f'Alright {ctx.author.mention}, I added `{song.title}` to your playlist.')
+
+    @playlist_.command(name='list')
+    async def list_playlist(self, ctx):
+        plist = await self.get_playlist(ctx)
+
+        if not plist:
+            return await ctx.send(f'{ctx.author.mention}, you do not currently have any songs in your Playlist.')
+
+        entries = [f'{i} - {s["song_name"]}' for i, s in enumerate(plist, 1)]
+        await ctx.paginate(title=f"{ctx.author.display_name}'s Playlist", entries=entries)
 
     @commands.command(name='dj', cls=utils.AbstractorGroup, aliases=['force'], abstractors=['new'])
     async def _dj(self, ctx):
@@ -1298,9 +1418,21 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
     @_dj.command(name='new', aliases=['change', 'assign', 'swap'])
     @utils.has_perms_or_dj(manage_guild=True)
-    async def dj_swap(self, ctx):
+    async def dj_swap(self, ctx, *, member: discord.Member):
         """Swap the DJ."""
         await self._del_msg(ctx)
+
+        vc = ctx.voice_client
+        if not vc:
+            return
+
+        if member not in vc.channel.members:
+            return await ctx.send('The member must be in Voice Channel to receive DJ.')
+        if member.bot:
+            return await ctx.send("Bot's can't be DJ's")
+
+        controller = self.get_controller(ctx)
+        controller.dj = member
 
     @_dj.command(name='mode', aliases=['status', 'level', 'levels', 'modes'])
     @utils.has_perms_or_dj(manage_guild=True)

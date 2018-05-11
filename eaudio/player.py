@@ -23,6 +23,7 @@ from discord.opus import Encoder as OpusEncoder
 
 import audioop
 import math
+import numpy
 import queue
 import time
 import threading
@@ -188,6 +189,7 @@ class AudioMixer(AudioPlayer):
             print(e)
 
             self.current = self.next
+            self.current.volume = math.ceil(self.current.volume * 100) / 100
             self.previous = self.current
             # The next song will be grabbed on the next loop.
             self.next = None
