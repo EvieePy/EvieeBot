@@ -223,12 +223,11 @@ class HelpPaginator(SimplePaginator):
                 index = int(resp.content)
             except ValueError:
                 await ctx.send('Invalid number, please enter a valid page number.', delete_after=10)
-                await self.del_msg(resp)
-                continue
+                return await self.del_msg(resp)
 
             if index > len(self.pages) or index < 1:
                 await ctx.send('Invalid number, please enter a valid page number.', delete_after=10)
-                await self.del_msg(resp)
+                return await self.del_msg(resp)
             else:
                 await self.del_msg(msg, resp)
                 self.previous = self.current

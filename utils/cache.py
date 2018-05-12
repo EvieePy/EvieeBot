@@ -236,14 +236,26 @@ class LFUCache(object):
     def __len__(self):
         return len(self.cache)
 
+    def __repr__(self):
+        return f'<LFU CACHE(LIMIT: {self.limit} ENTRIES: {len(self)})>'
+
     def __str__(self):
-        return f'LFU CACHE, LIMIT: {self.limit}, ENTRIES: {len(self)}'
+        return f'Items({[(k, v.value) for k, v in self.cache.items()]})'
 
     def __getitem__(self, item):
         return self.get(item)
 
     def __setitem__(self, key, value):
         return self.set(key=key, value=value)
+
+    def __delitem__(self, key):
+        lfunode = self.cache[key]
+        lfunode.free_myself()
+
+        del self.cache[key]
+
+    def __contains__(self, item):
+        return item in self.cache
 
     def get(self, key):
         if key in self.cache:
