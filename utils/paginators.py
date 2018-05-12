@@ -211,7 +211,7 @@ class HelpPaginator(SimplePaginator):
         def check(m):
             return m.author == ctx.author
 
-        msg = await ctx.send('What page would you like to goto?:')
+        msg = await ctx.send('What page would you like to goto?')
 
         while True:
             try:
