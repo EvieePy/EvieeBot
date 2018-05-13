@@ -45,6 +45,8 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         self.statuses = {'online': '<:dot_online:420205881200738314>', 'offline': '<:dot_invis:420205881272172544>',
                          'dnd': '<:dot_dnd:420205879883726858>', 'idle': '<:dot_idle:420205880508809218>'}
 
+        self.bot.loop.create_task(self.expiry_check())
+
     async def get_perms(self, ctx, target: utils.Union(discord.Member, discord.Role), *, previous=None):
 
         cembed = discord.Embed(title=f'Channel Permissions for {target.name}',
@@ -605,14 +607,15 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
             attachment = None
 
         expiry = datetime.datetime.utcnow() + datetime.timedelta(days=14)
+        content = self.bot.fkey.encrypt(msg.content.encode()).decode()
 
         async with self.bot.pool.acquire() as conn:
             await conn.execute("""INSERT INTO messages(mid, aid, cid, gid, ts, content, attachment, expiry)
                                   VALUES($1, $2, $3, $4, $5, $6, $7, $8)""",
-                               msg.id, msg.author.id, msg.channel.id, msg.guild.id, msg.created_at, msg.content,
+                               msg.id, msg.author.id, msg.channel.id, msg.guild.id, msg.created_at, content,
                                attachment, expiry)
 
-    @utils.backoff_loop
+    @utils.backoff_loop()
     async def expiry_check(self):
         async with self.bot.pool.acquire() as conn:
             await conn.execute("""DELETE FROM messages WHERE now() >= messages.expiry""")

@@ -419,7 +419,8 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
         if not member:
             return await ctx.send('You may only quote messages from this server. Please try again!')
 
-        embed = discord.Embed(title=str(member), description=msg['content'], colour=0x36393E)
+        content = self.bot.fkey.decrypt(msg['content'].encode()).decode()
+        embed = discord.Embed(title=str(member), description=content, colour=0x36393E)
         embed.set_thumbnail(url=member.avatar_url)
 
         attachment = msg['attachment']

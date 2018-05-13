@@ -178,6 +178,54 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
         return discord.File(f, f'{a.id}{b.id}_hearts.gif')
 
+    async def make_kiss(self, a, b):
+        font = ImageFont.truetype('resources/fonts/Playtime.ttf', 15)
+
+        aw, ah = font.getsize(a.display_name)
+        bw, bh = font.getsize(b.display_name)
+
+        frames = []
+
+        def generate():
+            with Image.open('resources/kiss.gif') as base:
+                for index, frame in enumerate(ImageSequence.Iterator(base)):
+                    draw = ImageDraw.Draw(frame)
+                    draw.text(((240 - aw) / 2, 50), a.display_name, font=font, fill=99)
+                    draw.text(((425 - bw) / 2, 275), b.display_name, font=font, fill=99)
+
+                    frames.append(frame.copy())
+                    del draw
+
+        await utils.evieecutor(generate, None, loop=self.bot.loop)
+
+        f = io.BytesIO()
+        frames[0].save(f, 'gif', save_all=True, duration=0.1, loop=0, append_images=frames[1:])
+        f.seek(0)
+
+        return discord.File(f, f'{a.id}{b.id}_kiss.gif')
+
+    @commands.command(name='kiss', aliases=['x'], cls=utils.EvieeCommand)
+    @commands.cooldown(4, 90, commands.BucketType.user)
+    async def give_kiss(self, ctx, *, member: discord.Member=None):
+        """Send someone some kisses.
+
+        Parameters
+        ------------
+        member:
+            The member to give kisses to. This can be in the form of an ID, Name, or Mention.
+
+        Examples
+        ----------
+        <prefix>kiss <member>
+
+            {ctx.prefix}kiss Myst
+        """
+        if member is None:
+            return await ctx.send("You can't kiss the air... **`xD`**")
+
+        await ctx.trigger_typing()
+        await ctx.send(file=await self.make_kiss(ctx.author, member))
+
     @commands.command(name='heart', aliases=['<3'], cls=utils.EvieeCommand)
     @commands.cooldown(4, 90, commands.BucketType.user)
     async def give_hearts(self, ctx, *, member: discord.Member = None):

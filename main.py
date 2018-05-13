@@ -43,6 +43,7 @@ import time
 import traceback
 import websockets
 from collections import deque
+from cryptography.fernet import Fernet
 
 import utils
 
@@ -110,6 +111,8 @@ class Botto(commands.Bot):
         self._last_result = None
         self.categories = {}
         self.extensions_other = {}
+
+        self.fkey = Fernet(config.get('ENCRYPTION', '_token').encode())
 
         super().__init__(command_prefix=get_prefix)
 
