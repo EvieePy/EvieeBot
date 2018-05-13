@@ -1372,16 +1372,19 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
                                           VALUES($1, $2, $3, $4)""",
                                        ctx.author.id, f'{ctx.author.id}{song.id}', song.id, song.title)
                 except Exception:
-                    return await ctx.send(f'{ctx.author.mention}. This song is already in your playlist!')
+                    return await ctx.send(f'{ctx.author.mention}. This song is already in your playlist!',
+                                          delete_after=30)
                 else:
-                    return await ctx.send(f'Alright {ctx.author.mention}, I added `{song.title}` to your playlist.')
+                    return await ctx.send(f'Alright {ctx.author.mention}, I added `{song.title}` to your playlist.',
+                                          delete_after=30)
 
     @playlist_.command(name='list')
     async def list_playlist(self, ctx):
         plist = await self.get_playlist(ctx)
 
         if not plist:
-            return await ctx.send(f'{ctx.author.mention}, you do not currently have any songs in your Playlist.')
+            return await ctx.send(f'{ctx.author.mention}, you do not currently have any songs in your Playlist.',
+                                  delete_after=30)
 
         entries = [f'{i} - {s["song_name"]}' for i, s in enumerate(plist, 1)]
         await ctx.paginate(title=f"{ctx.author.display_name}'s Playlist", entries=entries)
