@@ -88,11 +88,7 @@ class PlayerController:
         self.after_state = False
         self._updates = 0
 
-        _starters = (self.updater_task, self.inactivity_check)
-
-        for exc in _starters:
-            task = bot.loop.create_task(exc())
-            self._tasks[exc.__name__] = task
+        bot.loop.create_task(self.updater_task())
 
         self.PLAYER.do_start()
 
@@ -118,17 +114,6 @@ class PlayerController:
             task.cancel()
         except Exception:
             pass
-
-    async def inactivity_check(self):
-        while not self.bot.is_closed():
-            await asyncio.sleep(30)
-
-            if not self.last_seen:
-                continue
-
-            current = time.time()
-            if current - self.last_seen >= 300:
-                self.PLAYER.stop()
 
     async def updater_task(self):
         while not self.bot.is_closed():
@@ -909,7 +894,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             await ctx.send(f'{ctx.author.mention}, has voted to skip the song! **{req - len(controller.skips)}**'
                            f' more votes needed!', delete_after=30)
 
-    @commands.command(name='stop', cls=utils.EvieeCommand)
+    @commands.command(name='stop', cls=utils.EvieeCommand, aliases=['disconnect'])
     @commands.cooldown(1, 60, commands.BucketType.user)
     async def music_stop(self, ctx):
         """Kills the player and clears your queue.
