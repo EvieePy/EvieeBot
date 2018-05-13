@@ -128,7 +128,7 @@ class PlayerController:
 
             current = time.time()
             if current - self.last_seen >= 300:
-                self.bot.loop.create_task(self.after_all_call(self.PLAYER.current))
+                self.PLAYER.stop()
 
     async def updater_task(self):
         while not self.bot.is_closed():
