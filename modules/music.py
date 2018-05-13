@@ -191,12 +191,6 @@ class PlayerController:
         except (AttributeError, discord.HTTPException):
             pass
 
-        for task in self._tasks:
-            try:
-                task.cancel()
-            except Exception:
-                pass
-
         try:
             to_run = partial(self.cleanup, old, gid=self.gid)
             excs = await utils.evieecutor(func=to_run, executor=None, loop=self.bot.loop)
