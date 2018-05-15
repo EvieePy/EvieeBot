@@ -362,7 +362,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
 
         chain = {}
         try:
-            data = ' '.join([m.content for m in await channel.history(limit=1000).flatten()
+            data = ' '.join([m.clean_content for m in await channel.history(limit=1000).flatten()
                              if not m.author.bot]).replace('\n\n', ' ').split(' ')
         except discord.HTTPException:
             return await msg.edit('Could not access destination provided.')
