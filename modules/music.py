@@ -1110,7 +1110,9 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         adj = float(volume) / 100
 
         try:
-            vc.source.volume = adj
+            controller.PLAYER.current.volume = adj
+            if controller.PLAYER.next:
+                controller.PLAYER.next.volume = adj
         except AttributeError:
             pass
 
