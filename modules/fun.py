@@ -338,6 +338,57 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
     async def do_dab(self, ctx):
         await ctx.send('No.')
 
+    @commands.command(name='markov', cls=utils.EvieeCommand)
+    async def do_markov(self, ctx, *, channel: discord.TextChannel=None):
+        """Generate so babble using a markov chain.
+
+        Parameters
+        ------------
+        channel: Optional
+            The text channel to generate text from. This must be a channel I can read.
+            If not provided, defaults to current channel.
+
+        Examples
+        ----------
+        <prefix>markov
+        <prefix>markov <channel>
+
+            {ctx.prefix}markov #testing
+        """
+        if not channel:
+            channel = ctx.channel
+
+        msg = await ctx.send('Attempting to generate Markov...')
+
+        chain = {}
+        try:
+            data = ' '.join([m.content for m in await channel.history(limit=1000).flatten()
+                             if not m.author.bot]).replace('\n\n', ' ').split(' ')
+        except discord.HTTPException:
+            return await msg.edit('Could not access destination provided.')
+
+        if len(data) < 50:
+            return await msg.edit(content='Not enough data to create Markov.')
+
+        index = 1
+        for word in data[index:]:
+            key = data[index - 1]
+            if key in chain:
+                chain[key].append(word)
+            else:
+                chain[key] = [word]
+            index += 1
+
+        word1 = random.choice(list(chain.keys()))
+        message = word1.capitalize()
+
+        while len(message.split(' ')) < 12:
+            word2 = random.choice(chain[word1])
+            word1 = word2
+            message += ' ' + word2
+
+        await msg.edit(content=message)
+
 
 class RPSLS(enum.Enum):
     ROCK = 1
