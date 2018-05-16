@@ -192,6 +192,7 @@ class Admin(metaclass=utils.MetaCog, private=True):
         except Exception as e:
             value = stdout.getvalue()
             fmt = ''.join(traceback.format_exception(type(e), e, e.__traceback__, chain=False))
+            await ctx.message.add_reaction('heleblob2:337142426340950016')
             await ctx.send(f'```py\n{value}{fmt}\n```')
         else:
             value = stdout.getvalue()
@@ -224,9 +225,14 @@ class Admin(metaclass=utils.MetaCog, private=True):
         func = asyncio.create_subprocess_shell
         process = await func(cmd, stdout=pipe, stderr=pipe)
 
-        result = await process.communicate()
+        out, err = await process.communicate()
 
-        data = '\n'.join(result.decode().split('\n'))
+        if err:
+            await ctx.message.add_reaction('heleblob2:337142426340950016')
+            data = '\n'.join(err.decode().split('\n'))
+        else:
+            await ctx.message.add_reaction('lordheleapproves:397289205228896266')
+            data = '\n'.join(out.decode().split('\n'))
 
         if len(data) > 1000:
             bin_ = await self.bot.create_bin(data)
