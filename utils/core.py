@@ -27,12 +27,13 @@ from discord.ext import commands
 from discord.ext.commands.core import hooked_wrapped_callback
 
 import asyncio
+import concurrent.futures
 import datetime
 import inspect
 import sys
 import traceback
 from collections import OrderedDict
-from concurrent.futures import ThreadPoolExecutor
+
 
 import utils
 
@@ -480,7 +481,7 @@ def backoff_loop(until_ready=True):
 # Custom Executor
 async def evieecutor(func, executor=None, loop=None, *args, **kwargs):
     if not executor:
-        executor = ThreadPoolExecutor(max_workers=4)
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
     future = executor.submit(func, *args, **kwargs)
     future = asyncio.wrap_future(future)

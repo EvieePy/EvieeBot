@@ -96,12 +96,12 @@ class Admin(metaclass=utils.MetaCog, private=True):
 
     @commands.command(name='block', aliases=['blocc'], cls=utils.AbstractorGroup, abstractors=['add', 'remove', 'list'],
                       invoke_without_command=True)
-    async def _block(self, ctx, target: utils.Union(discord.Member, discord.User), *,
+    async def blocks(self, ctx, target: utils.Union(discord.Member, discord.User), *,
                      when: utils.UserFriendlyTime(commands.clean_content, default='something')):
         if not ctx.invoked_subcommand:
             await ctx.invoke(self.bot.get_command('block add'), target, when=when)
 
-    @_block.command(name='add')
+    @blocks.command(name='add')
     async def block_add(self, ctx, target: utils.Union(discord.Member, discord.User), *,
                         when: utils.UserFriendlyTime(commands.clean_content, default='something')):
 
@@ -124,7 +124,7 @@ class Admin(metaclass=utils.MetaCog, private=True):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send("Reason is a required argument that's missing derpy.")
 
-    @_block.command(name='remove')
+    @blocks.command(name='remove')
     async def block_remove(self, ctx, *, target: utils.Union(discord.Member, discord.User)):
         count = await self.bot.pool.execute("""DELETE FROM blocks WHERE id IN ($1)""", target.id)
 
@@ -134,7 +134,7 @@ class Admin(metaclass=utils.MetaCog, private=True):
         del self.bot.lru_blocks[target.id]
         await ctx.send(f'Successfully removed {target} from global blocks.')
 
-    @_block.command(name='list')
+    @blocks.command(name='list')
     async def block_list(self, ctx):
         ret = await self.bot.pool.fetch("""SELECT * FROM blocks""")
 
@@ -220,7 +220,8 @@ class Admin(metaclass=utils.MetaCog, private=True):
 
     @commands.command(name='sp', cls=utils.EvieeCommand)
     async def make_subprocess_call(self, ctx, *args):
-        proc = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
+        func = asyncio.create_subprocess_shell
+        proc = await func(*args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         out, err = await proc.communicate()
 
         data = '\n'.join(out.decode().split('\n'))
