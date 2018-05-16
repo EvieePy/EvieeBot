@@ -5,6 +5,7 @@ from discord.gateway import DiscordWebSocket, ResumeWebSocket
 
 import aiohttp
 import asyncio
+import concurrent.futures
 import configparser
 import datetime
 import inspect
@@ -94,6 +95,20 @@ class Bot(commands.Bot):
                 retry = backoff.delay()
                 self._reconnecting.set()
                 await asyncio.sleep(retry, loop=self.loop)
+
+
+async def run_in_executor(func, executor: concurrent.futures.Executor = None, loop=None, *args):
+    if not loop:
+        loop = asyncio.get_event_loop()
+
+    if not executor:
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=20)
+
+    future = executor.submit(func, *args)
+    future = asyncio.wrap_future(future)
+
+    result = await asyncio.wait_for(future, timeout=None, loop=loop)
+    return result
 
 
 def evieeloads(func):
