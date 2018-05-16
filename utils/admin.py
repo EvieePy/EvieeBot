@@ -6,6 +6,7 @@ import copy
 import datetime
 import inspect
 import io
+import shlex
 import subprocess
 import sys
 import textwrap
@@ -222,9 +223,10 @@ class Admin(metaclass=utils.MetaCog, private=True):
     @commands.command(name='sp', cls=utils.EvieeCommand)
     async def make_subprocess_call(self, ctx, cmd: str):
         pipe = asyncio.subprocess.PIPE
-        process = await asyncio.create_subprocess_shell(cmd, stdout=pipe, stderr=pipe)
+        cmd = shlex.quote(cmd)
+        proc = await asyncio.create_subprocess_shell(cmd, stdout=pipe, stderr=pipe, loop=asyncio.get_event_loop())
 
-        out, err = await process.communicate()
+        out, err = await proc.communicate()
 
         if err:
             await ctx.message.add_reaction('heleblob2:337142426340950016')
