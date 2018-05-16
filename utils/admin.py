@@ -222,11 +222,11 @@ class Admin(metaclass=utils.MetaCog, private=True):
 
     @commands.command(name='sp', cls=utils.EvieeCommand)
     async def make_subprocess_call(self, ctx, cmd: str):
-        pipe = asyncio.subprocess.PIPE
-        cmd = shlex.quote(cmd)
-        proc = await asyncio.create_subprocess_shell(cmd, stdout=pipe, stderr=pipe, loop=asyncio.get_event_loop())
+        pipe = subprocess.PIPE
+        cmd = shlex.split(cmd)
+        proc = subprocess.Popen(cmd, stdout=pipe, stderr=pipe)
 
-        out, err = await proc.communicate()
+        out, err = proc.communicate()
 
         if err:
             await ctx.message.add_reaction('heleblob2:337142426340950016')
