@@ -219,11 +219,14 @@ class Admin(metaclass=utils.MetaCog, private=True):
                     await ctx.send(f'```py\n{fmt}\n```')
 
     @commands.command(name='sp', cls=utils.EvieeCommand)
-    async def make_subprocess_call(self, ctx, *args):
-        proc = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
-        out, err = await proc.communicate()
+    async def make_subprocess_call(self, ctx, cmd: str):
+        pipe = asyncio.subprocess.PIPE
+        func = asyncio.create_subprocess_shell
+        process = await func(cmd, stdout=pipe, stderr=pipe)
 
-        data = '\n'.join(out.decode().split('\n'))
+        result = await process.communicate()
+
+        data = '\n'.join(result.decode().split('\n'))
 
         if len(data) > 1000:
             bin_ = await self.bot.create_bin(data)
