@@ -226,6 +226,7 @@ class Admin(metaclass=utils.MetaCog, private=True):
         process = await func(cmd, stdout=pipe, stderr=pipe)
 
         out, err = await process.communicate()
+        print(out)
 
         if err:
             await ctx.message.add_reaction('heleblob2:337142426340950016')
