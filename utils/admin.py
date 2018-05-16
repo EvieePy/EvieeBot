@@ -220,8 +220,7 @@ class Admin(metaclass=utils.MetaCog, private=True):
 
     @commands.command(name='sp', cls=utils.EvieeCommand)
     async def make_subprocess_call(self, ctx, *args):
-        func = asyncio.create_subprocess_shell
-        proc = await func(*args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        proc = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
         out, err = await proc.communicate()
 
         data = '\n'.join(out.decode().split('\n'))
