@@ -575,8 +575,8 @@ class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lv
         except Exception as e:
             return await ctx.send(f'There was an error processing APOD.\n```css\n[{e}]\n```')
 
-        embed = discord.Embed(title='Astronomy Picture of the Day', description=f'**{cont["title"]}** | {cont["date"]}')
-        embed.add_field(name='Explanation', value=cont['explanation'], inline=False)
+        embed = discord.Embed(title='Astronomy Picture of the Day', description=f'**{cont["title"]}** | {cont["date"]}'
+                                                                                f'\n{cont["explanation"]}')
 
         img = cont["url"]
         if not img.endswith(('gif', 'png', 'jpg')):
