@@ -383,7 +383,7 @@ class Botto(commands.Bot):
         if not category:
             return None
 
-        return {k: v for (k, v) in [(n.name, n.events) for n in category]}
+        return {k: v for (k, v) in [(type(n).__name__, n.events) for n in category]}
 
     def get_ext(self, name: str):
         ext = self.extensions.get(name, None)
