@@ -710,6 +710,10 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             await ctx.send(f'{ctx.author.mention} to avoid spam this command can only be used once every 10 minutes.\n'
                            f'```css\nTIME REMAINING:  [{m:02d} minutes]\n```', delete_after=30)
 
+    @music_play.command(name='scragly', hidden=True)
+    async def play_scragly(self, ctx):
+        await ctx.invoke(self.music_play, search='https://www.youtube.com/watch?v=b6rkXGikuNA')
+
     @commands.command(name='connect', aliases=['join'])
     async def connect_(self, ctx, *, channel: discord.VoiceChannel=None):
         """Connect to voice.
@@ -1416,6 +1420,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         controller = self.get_controller(ctx)
         controller.dj = member
+
+        await ctx.send(f'Ok, {ctx.author.mention}... {member.mention} is now the DJ.')
 
     @_dj.command(name='mode', aliases=['status', 'level', 'levels', 'modes'])
     @utils.has_perms_or_dj(manage_guild=True)

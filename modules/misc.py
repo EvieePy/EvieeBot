@@ -102,7 +102,11 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
             {ctx.prefix}emojis
             {ctx.prefix}emojis guild
         """
-        chunks = [e async for e in utils.pager(sorted(self.bot.emojis, key=lambda _: _.name), 8)]
+        if name:
+            emojis = [e for e in self.bot.emojis if name in e.name]
+            chunks = [e async for e in utils.pager(sorted(emojis, key=lambda _: _.name), 8)]
+        else:
+            chunks = [e async for e in utils.pager(sorted(self.bot.emojis, key=lambda _: _.name), 8)]
 
         pagey = utils.EmojiPaginator(title='Emojis', chunks=chunks)
         self.bot.loop.create_task(pagey.paginate(ctx))
