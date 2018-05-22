@@ -104,6 +104,9 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
         """
         if name:
             emojis = [e for e in self.bot.emojis if name in e.name]
+            if not emojis:
+                return await ctx.send(f'Could not find any emojis with search term: `{name}`')
+            
             chunks = [e async for e in utils.pager(sorted(emojis, key=lambda _: _.name), 8)]
         else:
             chunks = [e async for e in utils.pager(sorted(self.bot.emojis, key=lambda _: _.name), 8)]
