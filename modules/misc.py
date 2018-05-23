@@ -422,19 +422,20 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
         msg = msg[0]
 
-        member = ctx.guild.get_member(msg['aid'])
-        if not member:
-            return await ctx.send('You may only quote messages from this server. Please try again!')
+        user = self.bot.get_user(msg['aid'])
+        guild = self.bot.get_guild(msg['gid'])
 
         content = self.bot.fkey.decrypt(msg['content'].encode()).decode()
-        embed = discord.Embed(title=str(member), description=content, colour=0x36393E)
-        embed.set_thumbnail(url=member.avatar_url)
+        embed = discord.Embed(title=str(user) if user else 'Unknown User', description=content, colour=0x36393E)
+
+        if user:
+            embed.set_thumbnail(url=user.avatar_url)
 
         attachment = msg['attachment']
         if attachment:
             embed.set_image(url=attachment)
 
-        embed.set_footer(text=f'Sent in #{ctx.guild.get_channel(msg["cid"])}').timestamp = msg['ts']
+        embed.set_footer(text=f'Sent in {guild} - #{ctx.guild.get_channel(msg["cid"])}').timestamp = msg['ts']
 
         await ctx.send(embed=embed)
 
