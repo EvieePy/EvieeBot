@@ -435,7 +435,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
         if attachment:
             embed.set_image(url=attachment)
 
-        embed.set_footer(text=f'Sent in {guild} - #{ctx.guild.get_channel(msg["cid"])}').timestamp = msg['ts']
+        embed.set_footer(text=f'Sent in {guild} - #{guild.get_channel(msg["cid"])}').timestamp = msg['ts']
 
         await ctx.send(embed=embed)
 
