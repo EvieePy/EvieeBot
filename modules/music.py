@@ -361,7 +361,7 @@ class PlayerController:
         embed.add_field(name='Player Restrictions', value=f'`{self.restrictions.name.upper()}`')
         embed.add_field(name='Volume', value=f'**`{int(self.volume * 100)}%`**')
         embed.add_field(name='Equalizer', value=f'**`{self.eq["name"].capitalize()}`**')
-        # embed.set_footer(text='The Bot requires Manage Messages permissions for Page-2 controls to work.')
+        embed.set_footer(text='ℹ - Queue, 💟 - Add to playlist')
 
         if self.PLAYER.queue.qsize() > 0:
             if not self.PLAYER.next:
@@ -546,7 +546,10 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         elif ctx.author == controller.dj:
             return True
         elif not ctx.author.voice:
-            return False
+            if ctx.command.name == 'stop':
+                return True
+            else:
+                return False
         elif ctx.author.voice.mute or ctx.author.voice.deaf:
             return False
 
@@ -932,7 +935,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         controller = self.get_controller(ctx)
 
         if not await ctx.hasperms(manage_guild=True) and controller.dj.id != ctx.author.id:
-            if len(vc.channel.members) > 2:
+            if len(vc.channel.members) > 3:
                 return
 
         controller.PLAYER.stop()
