@@ -181,7 +181,6 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
             {ctx.prefix}cleanup 30
             {ctx.prefix}cleanup
         """
-        print('Cleanup...')
         messages = []
         perms = await ctx.hasperms(member=ctx.guild.me, manage_messages=True)
 
@@ -191,7 +190,17 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
             elif message.author == ctx.guild.me:
                 messages.append(message)
 
-        await ctx.channel.delete_messages(messages)
+        if not messages:
+            return await ctx.send('No messages to delete...')
+
+        if not perms:
+            for i, m in enumerate(messages):
+                if i == 10:
+                    break
+                await m.delete()
+        else:
+            await ctx.channel.delete_messages(messages)
+
         botm = len([m for m in messages if m.author == ctx.guild.me])
         userm = len(messages) - botm
 
