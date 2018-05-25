@@ -42,7 +42,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
     async def __error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             await ctx.send(f'You are only permitted to one Channel per 15m.\n```css\n'
-                           f'Your cooldown expires in: [{error.retry_after / 60} minutes.]\n```')
+                           f'Your cooldown expires in: [{int(error.retry_after / 60)} minutes.]\n```')
 
         elif isinstance(error, commands.BotMissingPermissions):
             missing = ', '.join(error.missing_perms)
