@@ -271,7 +271,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
         async with self.bot.pool.acquire() as conn:
             temps = await conn.fetch("""SELECT * FROM tempchannels""")
-            query = """DELETE FROM tempchannels WHERE tempchannels.cid IN ($1)"""
+            query = """DELETE FROM tempchannels WHERE cid IN ($1)"""
 
             for c in temps:
                 ts = c['ts']
@@ -284,9 +284,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
                 if not chan:
                     await conn.execute(query, chan.id)
-                    continue
-
-                if len(chan.members) == 0:
+                elif len(chan.members) == 0:
                     await conn.execute(query, chan.id)
 
                     try:
