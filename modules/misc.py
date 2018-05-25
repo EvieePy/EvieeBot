@@ -285,7 +285,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
                 chan = self.bot.get_channel(c['cid'])
 
                 if not chan:
-                    await conn.execute(query, chan.id)
+                    await conn.execute(query, c['cid'])
                 elif len(chan.members) == 0:
                     await conn.execute(query, chan.id)
 
