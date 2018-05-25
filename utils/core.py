@@ -38,7 +38,8 @@ from collections import OrderedDict
 import utils
 
 __all__ = ('EvieeContext', 'EvieeCommand', 'EvieeCommandGroup', 'AbstractorGroup', 'AbstractorCommand', 'Union',
-           'evieeloads', 'backoff_loop', 'get_dict', 'GuildConverter', 'MetaCog', 'evieecutor', 'has_perms_or_dj')
+           'evieeloads', 'backoff_loop', 'get_dict', 'GuildConverter', 'MetaCog', 'evieecutor', 'has_perms_or_dj',
+           'bot_has_permissions_guild')
 
 
 def get_dict(obj):
@@ -513,6 +514,21 @@ def has_perms_or_dj(**perms):
             return True
 
         raise commands.MissingPermissions(missing)
+    return commands.check(predicate)
+
+
+def bot_has_permissions_guild(**perms):
+    def predicate(ctx):
+        guild = ctx.guild
+        me = guild.me if guild is not None else ctx.bot.user
+        permissions = me.guild_permissions
+
+        missing = [perm for perm, value in perms.items() if getattr(permissions, perm, None) != value]
+
+        if not missing:
+            return True
+
+        raise commands.BotMissingPermissions(missing)
     return commands.check(predicate)
 
 

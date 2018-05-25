@@ -143,7 +143,8 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
         await ctx.send(f'{random.choice(self.hellos)} {ctx.author.display_name}! <:3cc:431696022461349888>')
 
     @commands.command(name='autoroom', cls=utils.AbstractorGroup, abstractors=['add', 'remove'])
-    @commands.bot_has_permissions(manage_channels=True, move_members=True)
+    @commands.bot_has_permissions(move_members=True)
+    @utils.bot_has_permissions_guild(manage_channels=True)
     async def auto_room(self, ctx):
         """Creates a Channel which creates Temp Channels when entered.
 
@@ -159,7 +160,8 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
         await ctx.invoke(self.add_auto_room)
 
     @auto_room.command(name='add')
-    @commands.bot_has_permissions(manage_channels=True, move_members=True)
+    @commands.bot_has_permissions(move_members=True)
+    @utils.bot_has_permissions_guild(manage_channels=True)
     async def add_auto_room(self, ctx):
         """Creates an Auto Temp Room creator."""
         try:
@@ -201,7 +203,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
     @commands.command(name='temp', aliases=['temp_channel'], cls=utils.EvieeCommand)
     @commands.cooldown(1, 900, commands.BucketType.user)
-    @commands.bot_has_permissions(manage_channels=True)
+    @utils.bot_has_permissions_guild(manage_channels=True)
     async def temp_chan(self, ctx, *, name: str=None):
         """Create a temporary Voice Channel.
 

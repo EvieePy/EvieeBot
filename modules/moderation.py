@@ -165,9 +165,9 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
     @commands.command(name='cleanup', cls=utils.EvieeCommand)
     @commands.has_permissions(manage_messages=True)
     async def do_cleanup(self, ctx, limit: int=20):
-        """Cleanup bot messages.
+        """Cleanup a bot sessions messages.
 
-        !Manage Messages is required to run this command!
+        !Manage Messages is required to run this command fully!
 
         Parameters
         ------------
@@ -181,8 +181,29 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
             {ctx.prefix}cleanup 30
             {ctx.prefix}cleanup
         """
-        cleared = await ctx.channel.purge(limit=limit, check=lambda m: m.author == ctx.guild.me)
-        await ctx.send(f'Successfully cleared `{len(cleared)}` message from myself.', delete_after=20)
+        print('Cleanup...')
+        messages = []
+        perms = await ctx.hasperms(member=ctx.guild.me, manage_messages=True)
+
+        async for message in ctx.channel.history(limit=limit):
+            if message.content.startswith(ctx.prefix) and perms:
+                messages.append(message)
+            elif message.author == ctx.guild.me:
+                messages.append(message)
+
+        await ctx.channel.delete_messages(messages)
+        botm = len([m for m in messages if m.author == ctx.guild.me])
+        userm = len(messages) - botm
+
+        embed = discord.Embed(title='Cleanup',
+                              description=f'Removed **{len(messages)}** messages successfully.',
+                              colour=0xffd4d4)
+        if not perms:
+            embed.add_field(name='Missing Permissions', value='Could not delete any user messages due to missing'
+                                                              ' **Manage Messages** permissions.')
+        embed.set_footer(text=f'User Messages - {userm} | Bot Messages - {botm}')
+
+        await ctx.send(embed=embed, delete_after=30)
 
     @do_cleanup.error
     async def do_cleanup_error(self, ctx, error):
