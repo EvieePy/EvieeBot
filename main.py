@@ -288,6 +288,19 @@ class Botto(commands.Bot):
             await self.invoke(ctx)
 
     async def on_ready(self):
+        if config.get('RESTART', 'mid') != '0':
+            chan = self.get_channel(int(config.get('RESTART', 'cid')))
+            msg = await chan.get_message(int(config.get('RESTART', 'mid')))
+
+            config.set('RESTART', 'cid', '0')
+            config.set('RESTART', 'mid', '0')
+
+            with open('config.ini', 'w') as configfile:
+                config.write(configfile)
+
+            await msg.edit(embed=discord.Embed(description='<:reset_on:449475278037712906> **`- Back Online...`**',
+                                               colour=0x8abe00))
+
         if not self.initialised:
             self.initialised = True
             print(f'Total Startup: {datetime.datetime.utcnow() - self.starttime}')
@@ -415,15 +428,29 @@ async def shutdown(*, reason=None):
 @bot.command(name='restart', cls=utils.EvieeCommand)
 @commands.is_owner()
 async def do_restart(ctx):
+    embed = discord.Embed(description='<:reset_init:449475270144163840> **`- Initialising...`**', colour=0xab00c5)
+    msg = await ctx.send(embed=embed)
+
+    config.set('RESTART', 'cid', str(ctx.channel.id))
+    config.set('RESTART', 'mid', str(msg.id))
+
+    with open('config.ini', 'w') as configfile:
+        config.write(configfile)
+
+    await asyncio.sleep(2)
     cog = bot.get_cog('Music')
-    msg = None
+
+    if cog.controllers:
+        embed.description = '<:reset_init:449475270144163840> **`- Waiting for Music Controllers to die...`**'
+        await msg.edit(embed=embed)
 
     while cog.controllers:
-        if not msg:
-            msg = await ctx.send('Waiting for controllers to die...')
         await asyncio.sleep(10)
 
-    await ctx.send(f'Ok {ctx.author.mention}, everything is clear! Be back soon...')
+    embed.description = '<:reset_off:449475278079524864> **`- Offline...`**'
+    embed._colour = discord.Colour(0xc12400)
+    await msg.edit(embed=embed)
+
     raise KeyboardInterrupt
 
 
