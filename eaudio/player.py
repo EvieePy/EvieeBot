@@ -70,27 +70,21 @@ class AudioPlayer(threading.Thread):
         while not self._end.is_set():
             if not self.current:
                 self.state = self.IDLE
-                print('wait')
                 self.current = self.queue.get(block=True)
                 self.previous = self.current
                 self.state = self.PLAYING
-                print('no wait')
                 self.reset_tokens()
             elif not self.next:
                 try:
                     self.next = self.queue.get(block=False)
-                    print('got next')
                 except queue.Empty:
                     pass
 
             if not self._resumed.is_set():
-                print('Paused')
                 self._resumed.wait()
-                print('Resumed')
                 continue
 
             if not self._connected.is_set():
-                print('Not connected')
                 self._connected.wait()
                 self.reset_tokens()
 
@@ -176,18 +170,10 @@ class AudioMixer(AudioPlayer):
             if self.next.volume < self.next_vol:
                 self.next.volume = self.next.volume + (self.next_vol / math.floor(12 * 50))
 
-            print(f'MAX: {self.next_vol}')
-
-            print(f'NEXT   : {self.next.volume}')
-            print(f'CURRENT: {self.current.volume}')
-            print(self.next_loops)
             current = self.current.read(volume=self.current.volume)
             next_ = self.next.read(volume=self.next.volume)
             data = audioop.add(current, next_, 2)
         except Exception as e:
-            print(type(e))
-            print(e)
-
             self.current = self.next
             self.current.volume = math.ceil(self.current.volume * 100) / 100
             self.previous = self.current
