@@ -39,7 +39,7 @@ import utils
 
 __all__ = ('EvieeContext', 'EvieeCommand', 'EvieeCommandGroup', 'AbstractorGroup', 'AbstractorCommand', 'Union',
            'evieeloads', 'backoff_loop', 'get_dict', 'GuildConverter', 'MetaCog', 'evieecutor', 'has_perms_or_dj',
-           'bot_has_permissions_guild')
+           'bot_has_permissions_guild', 'EvieeBed')
 
 
 def get_dict(obj):
@@ -389,6 +389,17 @@ class AbstractorCommands:
             pages.append(embed)
 
         await ctx.paginate(extras=pages)
+
+
+class EvieeBed(discord.Embed):
+
+    __slots__ = ('title', 'url', 'type', '_timestamp', '_colour', '_footer',
+                 '_image', '_thumbnail', '_video', '_provider', '_author',
+                 '_fields', 'description', 'extra')
+
+    def __init__(self, **kwargs):
+        self.extra = None
+        super(EvieeBed, self).__init__(**kwargs)
 
 
 # Converters

@@ -548,6 +548,10 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         elif not ctx.author.voice:
             if ctx.command.name == 'stop':
                 return True
+            elif ctx.command.name == 'playlist':
+                return True
+            elif ctx.command.name == 'playlist add' or ctx.command.name == 'playlist list':
+                return True
             else:
                 return False
         elif ctx.author.voice.mute or ctx.author.voice.deaf:
@@ -1373,7 +1377,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             return await ctx.send(f'{ctx.author.mention}, you do not currently have any songs in your Playlist.',
                                   delete_after=30)
 
-        entries = [f'{i} - {s["song_name"]}' for i, s in enumerate(plist, 1)]
+        entries = [f'{i} - `{s["song_name"]}`' for i, s in enumerate(plist, 1)]
         await ctx.paginate(title=f"{ctx.author.display_name}'s Playlist", entries=entries)
 
     @commands.command(name='dj', cls=utils.AbstractorGroup, aliases=['force'], abstractors=['new'])

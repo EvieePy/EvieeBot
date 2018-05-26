@@ -33,14 +33,6 @@ async def pager(entries, chunk: int):
         yield entries[x:x + chunk]
 
 
-class EvieeBed(discord.Embed):
-
-    __slots__ = ()
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-
 class SimplePaginator:
 
     __slots__ = ('entries', 'extras', 'title', 'description', 'colour', 'footer', 'length', 'prepend', 'append',
@@ -396,3 +388,26 @@ class EmojiPaginator(SimplePaginator):
         self.eof = float(len(self.pages) - 1)
         self.controls['⏭'] = self.eof
         self.controller = ctx.bot.loop.create_task(self.reaction_controller(ctx))
+
+
+class SpotifyPaginator(SimplePaginator):
+
+    __slots__ = ()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.controls['⏯'] = 'play'
+        # self.controls['💟'] = 'playlist add'
+
+    async def indexer(self, ctx, ctrl):
+        if ctrl == 'stop':
+            ctx.bot.loop.create_task(self.stop_controller(self.base))
+        elif ctrl == 'play':
+            await ctx.invoke(ctx.bot.get_command('play'), search=self.pages[self.current].extra)
+
+        elif isinstance(ctrl, int):
+            self.current += ctrl
+            if self.current > self.eof or self.current < 0:
+                self.current -= ctrl
+        else:
+            self.current = int(ctrl)

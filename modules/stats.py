@@ -4,14 +4,16 @@ from discord.ext import commands
 import asyncio
 import datetime
 import functools
+import inspect
 import itertools
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
-
+import pathlib
 from io import BytesIO
 from matplotlib.ticker import MultipleLocator
+from more_itertools import ilen, with_iter
 
 import utils
 
@@ -108,7 +110,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         activity = member.activity
 
         if not embed:
-            embed = discord.Embed()
+            embed = utils.EvieeBed()
             embed.set_thumbnail(url=member.avatar_url)
             embed.set_footer(icon_url='https://i.imgur.com/o434xfQ.png',
                              text=f'Listening with Spotify... {member}')
@@ -119,6 +121,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
 
         artists = ', '.join(activity.artists)
         embed.description = f'by **`{artists}`**.'
+        embed.extra = f'{activity.title} {artists}'
 
         embed.add_field(name='Album', value=activity.album)
         embed.add_field(name='Duration', value=format_delta(delta=activity.duration, brief=True))
@@ -261,14 +264,15 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
 
         pages = []
         for member in members:
-            embed = discord.Embed()
+            embed = utils.EvieeBed()
             embed.set_author(name=member.display_name, icon_url=member.avatar_url)
             embed.set_thumbnail(url=member.avatar_url)
             embed.set_footer(icon_url='https://i.imgur.com/o434xfQ.png',
                              text=f'Listening with Spotify... {member}')
             pages.append(self.build_spotify(member, embed=embed))
 
-        await ctx.paginate(extras=pages)
+        pagey = utils.SpotifyPaginator(extras=pages)
+        self.bot.loop.create_task(pagey.paginate(ctx))
 
     @commands.command(name='activity')
     async def get_activity(self, ctx, *, member: discord.Member=None):
@@ -621,5 +625,24 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
             await conn.execute("""DELETE FROM messages WHERE now() >= messages.expiry""")
 
         await asyncio.sleep(10300)
+
+    @commands.command(name='linecount', cls=utils.EvieeCommand)
+    async def lc(self, ctx, target=None):
+        cmd = self.bot.get_command(target)
+        cog = self.bot.get_cog(target)
+        ext = self.bot.get_ext(target)
+
+        if cmd:
+            length = len(inspect.getsourcelines(cmd.callback)[0])
+        elif cog:
+            length = len(inspect.getsourcelines(cog.__class__)[0])
+        elif ext:
+            length = len(inspect.getsourcelines(ext)[0])
+        else:
+            length = sum(ilen(with_iter(p.open(encoding='utf-8'))) for p in pathlib.Path('.').rglob('*.py')
+                         if not str(p.parent).startswith('venv'))
+            return await ctx.send(f'**Total Lines:** `{length}`')
+
+        await ctx.send(f'**{target} Lines:** `{length}`')
 
 
