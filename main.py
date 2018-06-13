@@ -37,6 +37,7 @@ import importlib
 import inspect
 import itertools
 import pathlib
+import psutil
 import os
 import sys
 import time
@@ -96,6 +97,7 @@ class Botto(commands.Bot):
         self.initialised = False
         self.pool = None  # Async init
         self.session = None  # Async init
+        self.proc = psutil.Process()
         self.owners = (402159684724719617, 214925855359631360)
         self.starttime = datetime.datetime.utcnow()
 
@@ -411,7 +413,6 @@ bot = Botto()
 
 async def shutdown(*, reason=None):
     """Somewhat clean shutdown with basic debug info."""
-    await asyncio.sleep(5)
     await bot.logout()
 
     print(f'\n\nShutting down due to {type(reason).__name__}...\n{"="*30}\n')

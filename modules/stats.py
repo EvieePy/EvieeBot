@@ -9,6 +9,7 @@ import itertools
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import psutil
 import numpy as np
 import pathlib
 from io import BytesIO
@@ -25,9 +26,9 @@ def format_delta(*, delta, brief=False):
 
     if not brief:
         if days:
-            fmt = '{d} days, {h} hours, {m} minutes, and {s} seconds'
+            fmt = '{d} d, {h} h, {m} m, and {s} s'
         else:
-            fmt = '{h} hours, {m} minutes, and {s} seconds'
+            fmt = '{h} h, {m} m, and {s} s'
     else:
         fmt = '{h}:{m}:{s}'
         if days:
@@ -148,7 +149,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
 
         return embed
 
-    @commands.command(name='profile', cls=utils.EvieeCommand)
+    @commands.command(name='profile', cls=utils.EvieeCommand, aliases=['userinfo'])
     async def _profile(self, ctx, *, member: discord.Member=None):
         """Show profile information for a member. Includes activity, permissions and other info.
 
@@ -599,6 +600,12 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
                        file=discord.File(pfile, 'rttping.png'))
 
     async def on_message(self, msg):
+        async with self.bot.pool.acquire() as conn:
+            await conn.execute("""INSERT INTO stats(item, value) VALUES('messages', 1)
+                                  ON CONFLICT(item)
+                                    DO UPDATE SET value = COALESCE(stats.value, 0)::int + 1
+                                    WHERE stats.item IN('messages')""")
+
         if msg.author.bot:
             return
 
@@ -618,6 +625,13 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
                                   VALUES($1, $2, $3, $4, $5, $6, $7, $8)""",
                                msg.id, msg.author.id, msg.channel.id, msg.guild.id, msg.created_at, content,
                                attachment, expiry)
+
+    async def on_command_completion(self, ctx):
+        async with self.bot.pool.acquire() as conn:
+            await conn.execute("""INSERT INTO stats(item, value) VALUES('commands', 1)
+                                  ON CONFLICT(item)
+                                    DO UPDATE SET value = COALESCE(stats.value, 0)::int + 1
+                                    WHERE stats.item IN('commands')""")
 
     @utils.backoff_loop()
     async def expiry_check(self):
@@ -644,5 +658,34 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
             return await ctx.send(f'**Total Lines:** `{length}`')
 
         await ctx.send(f'**{target} Lines:** `{length}`')
+
+    @commands.command(name='about', cls=utils.EvieeCommand)
+    async def about_(self, ctx):
+        async with self.bot.pool.acquire() as conn:
+            coms = await conn.fetchval("""SELECT value FROM stats WHERE item IN('commands')""")
+            messages = await conn.fetchval("""SELECT value FROM stats WHERE item IN('messages')""")
+
+        uptime = format_delta(delta=datetime.datetime.utcnow() - self.bot.starttime, brief=False)
+        memory = self.bot.proc.memory_full_info().uss / 1024 ** 2
+        cpu = self.bot.proc.cpu_percent() / psutil.cpu_count()
+        ping = np.average(list(self.bot._wspings))
+        print(ping)
+
+        embed = discord.Embed(colour=0xff6961,
+                              description=f'**Useful Links:**\n'
+                                          f'[Support Server](https://discord.gg/EVxmWHS)\n'
+                                          f'[Github Page](https://github.com/EvieePy/EvieeBot)\n'
+                                          f'[Mystbin](http://mystb.in)\n\n'
+                                          f'Created by **Eviee#0666** with **Python 3.6.5**.\n\n'
+                                          f'Messages Read  :  **{messages}**\n'
+                                          f'Commands Run  :  **{coms}**\n'
+                                          f'Servers Joined    :  **{len(self.bot.guilds)}**\n\n'
+                                          f'Currently up for **{uptime}**\n\n'
+                                          f'Memory Usage   :  **{memory:.2f}** MiB\n'
+                                          f'CPU Usage          :  **{cpu:.2f}** %\n'
+                                          f'Avg Ping              : **{ping:.2f}** ms')
+        embed.set_thumbnail(url=self.bot.user.avatar_url)
+
+        await ctx.send(embed=embed)
 
 

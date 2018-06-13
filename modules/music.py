@@ -89,6 +89,7 @@ class PlayerController:
         self._updates = 0
 
         bot.loop.create_task(self.updater_task())
+        bot.loop.create_task(self.inactivity_check())
 
         self.PLAYER.do_start()
 
@@ -114,6 +115,14 @@ class PlayerController:
             task.cancel()
         except Exception:
             pass
+
+    async def inactivity_check(self):
+        while not self.bot.is_closed():
+            await asyncio.sleep(300)
+
+            if self.PLAYER.state == self.PLAYER.IDLE:
+                if self.PLAYER.queue.empty():
+                    self.bot.loop.create_task(self.after_all_call(self.PLAYER.previous))
 
     async def updater_task(self):
         while not self.bot.is_closed():
@@ -943,6 +952,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
                 return
 
         controller.PLAYER.stop()
+        await ctx.send('`Ok, goodbye :)`')
 
     @commands.command(name='shuffle', aliases=['mix'], cls=utils.EvieeCommand)
     @commands.cooldown(2, 60, commands.BucketType.guild)
@@ -1606,6 +1616,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         controller = self.get_controller(ctx)
         controller.PLAYER.stop()
+        await ctx.send('`Ok, goodbye! :)`')
 
     @_dj.command(name='shuffle')
     @commands.cooldown(3, 60, commands.BucketType.user)
