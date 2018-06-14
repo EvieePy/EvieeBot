@@ -688,10 +688,6 @@ class ConnectFour:
 
             self.turn += 1
 
-            if self.turn == 42:
-                await self.board.delete()
-                return await ctx.send(embed=self.generate_draw())
-
             row = self.next_open(move)
             self.make_move(row, move, player)
 
@@ -706,6 +702,10 @@ class ConnectFour:
                     return await ctx.send(embed=self.generate_winner(player))
                 return await self.board.edit(embed=self.generate_winner(player))
 
+            if self.turn == 42:
+                await self.board.delete()
+                return await ctx.send(embed=self.generate_draw())
+            
             if self.new:
                 self.board = await ctx.send(embed=self.generate_board())
                 self.new = False
