@@ -689,6 +689,7 @@ class ConnectFour:
             self.turn += 1
 
             if self.turn == 42:
+                cog.c4.remove(ctx.channel.id)
                 if not self.check_win(player):
                     await self.board.delete()
                     return await ctx.send(embed=self.generate_draw())
