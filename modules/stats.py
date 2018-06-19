@@ -669,7 +669,6 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         memory = self.bot.proc.memory_full_info().uss / 1024 ** 2
         cpu = self.bot.proc.cpu_percent() / psutil.cpu_count()
         ping = np.average(list(self.bot._wspings))
-        print(ping)
 
         embed = discord.Embed(colour=0xff6961,
                               description=f'**Useful Links:**\n'
@@ -685,6 +684,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
                                           f'CPU Usage          :  **{cpu:.2f}** %\n'
                                           f'Avg Ping              : **{ping:.2f}** ms')
         embed.set_thumbnail(url=self.bot.user.avatar_url)
+        embed.set_footer(text=f'Use {ctx.prefix}feedback to report bugs or leave feedback. <3')
 
         await ctx.send(embed=embed)
 

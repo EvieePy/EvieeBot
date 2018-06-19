@@ -663,7 +663,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
     @music_play.command(name='playlist')
     @commands.cooldown(1, 600, commands.BucketType.user)
-    async def play_playlist(self, ctx):
+    async def play_playlist(self, ctx, mixed=None):
         plist = await self.get_playlist(ctx)
 
         if not plist:
@@ -684,6 +684,9 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await ctx.send(f'Alright {ctx.author.mention}, adding {len(plist)} songs from your playlist to the queue.',
                        delete_after=30)
         controller = self.get_controller(ctx)
+
+        if any(n == mixed.lower() for n in ['mix', 'shuffle', 'mixed', 'random', 'shuffled']):
+            random.shuffle(plist)
 
         for s in plist:
             controller.active_loads += 1
