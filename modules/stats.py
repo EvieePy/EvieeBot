@@ -15,6 +15,7 @@ import pathlib
 from io import BytesIO
 from matplotlib.ticker import MultipleLocator
 from more_itertools import ilen, with_iter
+from PIL import Image, ImageSequence, ImageFont, ImageDraw, ImageColor
 
 import utils
 
@@ -606,7 +607,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
                                     DO UPDATE SET value = COALESCE(stats.value, 0)::int + 1
                                     WHERE stats.item IN('messages')""")
 
-        if msg.author.bot:
+        if msg.author.bot or not msg.guild:
             return
 
         if msg.attachments:
@@ -676,9 +677,8 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
                                           f'[Github Page](https://github.com/EvieePy/EvieeBot)\n'
                                           f'[Mystbin](http://mystb.in)\n\n'
                                           f'Created by **Eviee#0666** with **Python 3.6.5**.\n\n'
-                                          f'Messages Read  :  **{messages}**\n'
-                                          f'Commands Run  :  **{coms}**\n'
-                                          f'Servers Joined    :  **{len(self.bot.guilds)}**\n\n'
+                                          f'**{messages}** messages read with **{coms}** commands invoked in'
+                                          f' **{len(self.bot.guilds)}** servers.\n\n'
                                           f'Currently up for **{uptime}**\n\n'
                                           f'Memory Usage   :  **{memory:.2f}** MiB\n'
                                           f'CPU Usage          :  **{cpu:.2f}** %\n'
@@ -687,5 +687,38 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         embed.set_footer(text=f'Use {ctx.prefix}feedback to report bugs or leave feedback. <3')
 
         await ctx.send(embed=embed)
+
+    def make_pie(self):
+
+        labels = 'Online', 'Offline', 'DnD', 'Idle'
+        fracs = [10, 35, 35, 20]
+        explode = (0.05, 0.05, 0.05, 0.05)
+        colours = ('#43B581', '#747F8D', '#F04747', '#FAA61A')
+
+        plt.pie(fracs, explode=explode, autopct='%.0f%%', shadow=False, colors=colours)
+
+        pie = BytesIO()
+        plt.savefig(pie, transparent=True)
+        pie.seek(0)
+        plt.clf()
+        plt.close()
+
+        with Image.open('resources/pie_legend.png') as base:
+            with Image.open(pie) as chart:
+                base.paste(chart, box=(-100, -80), mask=chart)
+
+            f = BytesIO()
+            base.save(f, 'png')
+            f.seek(0)
+
+        return f
+
+    @commands.command(name='ps', aliases=['piestatus'])
+    @commands.is_owner()
+    async def pie_status(self, ctx):
+        to_do = functools.partial(self.make_pie)
+        pfile = await utils.evieecutor(to_do, loop=self.bot.loop)
+
+        await ctx.send(file=discord.File(pfile, 'pie_test.png'))
 
 

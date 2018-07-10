@@ -49,16 +49,14 @@ from cryptography.fernet import Fernet
 import utils
 
 try:
-    pass
-    # import uvloop
+    import uvloop
 except ImportError:
     pass
 except AttributeError:
     # For 3.7 testing...
     pass
 else:
-    pass
-    # asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 finally:
     loop = asyncio.get_event_loop()
 
@@ -464,7 +462,7 @@ def start():
         return loop.run_until_complete(shutdown(reason=e))
 
     try:
-        loop.run_until_complete(bot.start(config.get('TOKEN', '_tokenT')))
+        loop.run_until_complete(bot.start(config.get('TOKEN', '_tokent')))
     except KeyboardInterrupt as e:
         return loop.run_until_complete(shutdown(reason=e))
 

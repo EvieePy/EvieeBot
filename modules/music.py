@@ -456,6 +456,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             controller.PLAYER.pause()
 
             if controller.PLAYER.next:
+                controller.PLAYER.previous = await eaudio.YTDLSource.copy_source(controller=controller,
+                                                                                 source=controller.PLAYER.current)
                 controller.PLAYER.current = await eaudio.YTDLSource.copy_source(controller=controller,
                                                                                 source=controller.PLAYER.next)
             else:
@@ -1067,11 +1069,15 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         while controller.PLAYER.state == controller.PLAYER.MIXING:
             await asyncio.sleep(0)
 
+        if controller.PLAYER.state == controller.PLAYER.PLAYING:
+            to_repeat = controller.PLAYER.current
+        else:
+            to_repeat = controller.PLAYER.previous
+
         try:
-            source = await eaudio.YTDLSource.copy_source(controller=controller, source=controller.PLAYER.previous)
+            source = await eaudio.YTDLSource.copy_source(controller=controller, source=to_repeat)
         except Exception as e:
-            print(e)
-            return
+            return print(e)
 
         if controller.PLAYER.next:
             controller.PLAYER.queue.queue.appendleft(controller.PLAYER.next)
