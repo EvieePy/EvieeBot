@@ -320,7 +320,7 @@ class Source(metaclass=utils.MetaCog, category='API', thumbnail='https://i.imgur
         await ctx.send(embed=self.rtfs_embed(orig, sorted(to_return, key=lambda a: len(a))))
 
     @commands.command(name='source', aliases=['sauce'], cls=utils.EvieeCommand)
-    async def get_source(self, ctx, *, target: str):
+    async def get_source(self, ctx, *, target: str=None):
         """Retrieve the source code of a bot command or cog.
 
         Aliases
@@ -340,6 +340,9 @@ class Source(metaclass=utils.MetaCog, category='API', thumbnail='https://i.imgur
             {ctx.prefix}source prefix
             {ctx.prefix}source Fun
         """
+        if not target:
+            await ctx.send('<https://github.com/EvieePy/EvieeBot>')
+
         cmd = self.bot.get_command(target)
         cog = self.bot.get_cog(target)
         ext = self.bot.get_ext(target)
