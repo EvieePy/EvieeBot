@@ -663,6 +663,7 @@ class ConnectFour:
                                       f' {opposite[0].mention} wins by default.')
 
             if any(n == message.content for n in ['quit', 'end', 'die', 'ff', 'surrender']):
+                cog.c4.remove(ctx.channel.id)
                 await self.board.delete()
                 await ctx.send(embed=self.generate_winner(opposite))
                 return await ctx.send(f'{player[0].mention} has quit the game. {opposite[0].mention} wins by default.')
