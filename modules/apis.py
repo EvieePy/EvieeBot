@@ -341,7 +341,7 @@ class Source(metaclass=utils.MetaCog, category='API', thumbnail='https://i.imgur
             {ctx.prefix}source Fun
         """
         if not target:
-            await ctx.send('<https://github.com/EvieePy/EvieeBot>')
+            return await ctx.send('<https://github.com/EvieePy/EvieeBot>')
 
         cmd = self.bot.get_command(target)
         cog = self.bot.get_cog(target)

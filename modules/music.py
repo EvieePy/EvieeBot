@@ -677,7 +677,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         if vc is None:
             try:
                 await ctx.invoke(self.connect_)
-            except Exception:
+            except Exception as e:
                 return
         else:
             if ctx.author not in vc.channel.members:
