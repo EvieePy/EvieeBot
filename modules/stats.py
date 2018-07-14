@@ -139,7 +139,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
             return None
 
         if not embed:
-            embed = discord.Embed()
+            embed = utils.EvieeBed()
             embed.set_thumbnail(url=member.avatar_url)
             embed.set_footer(text='<< Member Info | Channel Permissions >>')
 
@@ -173,13 +173,13 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         aembed = None
 
         activity = member.activity
-        embed = discord.Embed(title=f'Profile for {member}',
-                              colour=member.colour,
-                              description=f'```ini\n'
-                                          f'ID      : {member.id}\n'
-                                          f'CREATED : [{member.created_at.strftime("%d %b, %Y @ %H:%M")}]\n'
-                                          f'JOINED  : [{member.joined_at.strftime("%d %b, %Y @ %H:%M")}]\n'
-                                          f'```')
+        embed = utils.EvieeBed(title=f'Profile for {member}',
+                               colour=member.colour,
+                               description=f'```ini\n'
+                                           f'ID      : {member.id}\n'
+                                           f'CREATED : [{member.created_at.strftime("%d %b, %Y @ %H:%M")}]\n'
+                                           f'JOINED  : [{member.joined_at.strftime("%d %b, %Y @ %H:%M")}]\n'
+                                           f'```')
         embed.set_thumbnail(url=member.avatar_url)
         embed.add_field(name='Display Name', value=member.display_name)
         embed.add_field(name='Status', value=f'{self.statuses.get(str(member.status))} **`{member.status}`**')

@@ -87,7 +87,7 @@ async def get_prefix(bot_, msg):
     return commands.when_mentioned_or(*ret)(bot_, msg)
 
 
-class Botto(commands.AutoShardedBot):
+class Botto(commands.Bot):
     """The main bot class."""
 
     def __init__(self):
