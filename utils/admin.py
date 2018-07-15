@@ -11,6 +11,7 @@ import subprocess
 import sys
 import textwrap
 import time
+import timeit
 import traceback
 from contextlib import redirect_stdout
 
@@ -187,6 +188,7 @@ class Admin(metaclass=utils.MetaCog, private=True):
             return await ctx.send(self.get_syntax_error(e))
 
         func = env['func']
+
         try:
             with redirect_stdout(stdout):
                 ret = await func()
@@ -239,3 +241,24 @@ class Admin(metaclass=utils.MetaCog, private=True):
             return await ctx.send(bin_)
 
         await ctx.send(f'```\n{data}\n```')
+
+    @commands.command(name='timeit', cls=utils.EvieeCommand)
+    @commands.is_owner()
+    async def timeit_(self, ctx, statement, number: int=100000, setup=''):
+        env = {
+            'bot': ctx.bot,
+            'ctx': ctx,
+            'channel': ctx.channel,
+            'author': ctx.author,
+            'guild': ctx.guild,
+            'message': ctx.message,
+            'self': self
+        }
+        env.update(globals())
+
+        try:
+            result = timeit.timeit(statement, number=number, setup=setup, globals=env)
+        except Exception as e:
+            return await ctx.send(f'**There was an error running your timeit:**\n```prolog\n{e}\n```')
+
+        await ctx.send(f'```ini\nTimeit Results ({number}x):\n\n[Statement]\n{statement}\n\n[Result]\n{result}\n```')

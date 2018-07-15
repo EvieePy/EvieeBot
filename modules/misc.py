@@ -446,8 +446,6 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
         resp, cont = await self.bot.aio(url=f'http://www.omdbapi.com/?apikey={self.omdb}&t={search}&r=json',
                                         return_attr='json', method='get')
 
-        print(cont)
-
         if cont['Response'] == 'False':
             return await ctx.send(f'I could not find a movie matching: `{search}`')
 

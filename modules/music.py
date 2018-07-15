@@ -665,7 +665,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
     @music_play.command(name='playlist')
     @commands.cooldown(1, 600, commands.BucketType.user)
-    async def play_playlist(self, ctx, mixed=None):
+    async def play_playlist(self, ctx, mixed=''):
         plist = await self.get_playlist(ctx)
 
         if not plist:
