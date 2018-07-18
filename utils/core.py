@@ -30,6 +30,7 @@ import asyncio
 import concurrent.futures
 import datetime
 import inspect
+import re
 import sys
 import traceback
 from collections import OrderedDict
@@ -39,7 +40,7 @@ import utils
 
 __all__ = ('EvieeContext', 'EvieeCommand', 'EvieeCommandGroup', 'AbstractorGroup', 'AbstractorCommand', 'Union',
            'evieeloads', 'backoff_loop', 'get_dict', 'GuildConverter', 'MetaCog', 'evieecutor', 'has_perms_or_dj',
-           'bot_has_permissions_guild', 'EvieeBed')
+           'bot_has_permissions_guild', 'EvieeBed', 'OsuConverter')
 
 
 def get_dict(obj):
@@ -428,6 +429,22 @@ class GuildConverter(commands.IDConverter):
             result = ctx.bot.get_guild(int(id_.group(1)))
         else:
             result = discord.utils.find(lambda g: g.name == argument, ctx.bot.guilds)
+
+        if not result:
+            raise commands.BadArgument(f'Could not find a guild matching <{argument}>', argument)
+
+        return result
+
+
+class OsuConverter(commands.IDConverter):
+    """Converts to a Guild."""
+    async def convert(self, ctx, argument):
+        id_ = self._get_id_match(argument) or re.match(r'<@!?([0-9]+)>$', argument)
+
+        if id_:
+            result = ctx.guild.get_member(int(id_.group(1)))
+        else:
+            result = argument
 
         if not result:
             raise commands.BadArgument(f'Could not find a guild matching <{argument}>', argument)

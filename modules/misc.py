@@ -6,7 +6,9 @@ import datetime
 import functools
 import os
 import random
+import time
 import youtube_dl
+from osuapi import OsuApi, AHConnector
 
 import utils
 
@@ -31,11 +33,12 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
      I need a tequila.
      """
 
-    __slots__ = ('bot', 'omdb')
+    __slots__ = ('bot', 'omdb', 'osu')
 
     def __init__(self, bot):
         self.bot = bot
         self.omdb = bot._config.get('OMDB', '_token')
+        self.osu = OsuApi(bot._config.get('OSU', '_token'), connector=AHConnector())
 
         bot.loop.create_task(self.temp_checker())
 
@@ -494,6 +497,56 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
             return await ctx.send('**This is not binary!**')
 
         return await ctx.send(out)
+
+    @commands.command(name='osu', cls=utils.EvieeCommand)
+    async def osu_(self, ctx, *, user: utils.OsuConverter=None):
+        if not user:
+            user = ctx.author
+
+        if isinstance(user, discord.Member):
+            async with self.bot.pool.acquire() as conn:
+                osu = await conn.fetchval("""SELECT username FROM osu WHERE id IN($1)""", user.id)
+                if not osu:
+                    return await ctx.send(f'{user} does not have an osu! account linked.\n'
+                                          f'`Set one with: {ctx.prefix}setosu osu_username`')
+        else:
+            osu = user
+
+        results = await self.osu.get_user(osu)
+        if not results:
+            return await ctx.send(f'Could not find an osu! account matching: `{osu}`')
+
+        results = results[0]
+
+        embed = discord.Embed(title=f'{results.username} | {results.country}',
+                              description=f'#{results.pp_rank} ({results.pp_raw} pp)', colour=0x8866ee)
+        if isinstance(user, discord.Member):
+            embed.set_thumbnail(url=user.avatar_url)
+        else:
+            embed.set_thumbnail(url='http://a.ppy.sh/%s?_=%s' % (results.user_id, time.time()))
+
+        embed.add_field(name='Level', value=results.level)
+        embed.add_field(name='Plays', value=results.playcount)
+        embed.add_field(name='Accuracy', value=f'{results.accuracy:0.2f}%')
+        embed.add_field(name='Hits', value=results.total_hits)
+        embed.set_image(url=f'http://lemmmy.pw/osusig/sig.php?'
+                            f'colour=hex8866ee&'
+                            f'uname={results.username}&'
+                            f'pp=1&'
+                            f'flagshadow&'
+                            f'onlineindicator=undefined&'
+                            f'xpbar')
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name='setosu', cls=utils.EvieeCommand)
+    async def set_osu(self, ctx, *, name: str):
+        async with self.bot.pool.acquire() as conn:
+            await conn.execute("""INSERT INTO osu(id, username) VALUES($1, $2)
+                                  ON CONFLICT(id) DO UPDATE SET username = $2 WHERE osu.id IN($1)""",
+                               ctx.author.id, name)
+
+        await ctx.send(f'Successfully set your osu! account to: `{name}`')
 
 
 class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lvQq.png'):
