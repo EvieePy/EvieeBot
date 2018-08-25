@@ -104,7 +104,7 @@ class Admin(metaclass=utils.MetaCog, private=True):
             await ctx.invoke(self.bot.get_command('block add'), target, when=when)
 
     @blocks.command(name='add')
-    async def block_add(self, ctx, target: utils.Union(discord.Member, discord.User), *,
+    async def block_add(self, ctx, target: discord.Member, *,
                         when: utils.UserFriendlyTime(commands.clean_content, default='something')):
 
         ret = await self.bot.pool.fetchval("""SELECT id FROM blocks WHERE id IN ($1)""", target.id)
