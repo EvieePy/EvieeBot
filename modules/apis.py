@@ -354,8 +354,8 @@ class Source(metaclass=utils.MetaCog, category='API', thumbnail='https://i.imgur
         elif ext:
             code = textwrap.dedent(inspect.getsource(ext))
         else:
-            embed = discord.Embed(title=f'Source - <{target}>',
-                                  description=f'Sorry no results were found for {target}\n\n'
+            embed = discord.Embed(title=f'Source - <{target.strip()}>',
+                                  description=f'Sorry no results were found for {target.strip()}\n\n'
                                               f'Make sure you specify a valid command or cog.',
                                   colour=0x6dc9c9)
             embed.add_field(name='EvieeBot', value='https://github.com/EvieePy/EvieeBot')
