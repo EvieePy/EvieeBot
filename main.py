@@ -62,7 +62,7 @@ finally:
     loop = asyncio.get_event_loop()
 
 
-config = configparser.ConfigParser()
+config = configparser.RawConfigParser()
 config.read('config.ini')
 
 
