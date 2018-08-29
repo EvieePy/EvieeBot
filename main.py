@@ -117,7 +117,7 @@ class Botto(commands.Bot):
 
         super().__init__(command_prefix=get_prefix)
         self.lavalink = pylava.Connection(bot=self,
-                                          password=f'{self._config.get("LL", "value")}',
+                                          password=self._config.get("LL", "value"),
                                           rest_url='http://localhost:2333',
                                           ws_url='ws://localhost:8080')
 
