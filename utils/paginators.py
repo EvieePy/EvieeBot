@@ -396,7 +396,7 @@ class SpotifyPaginator(SimplePaginator):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.controls['⏯'] = 'play'
+        # self.controls['⏯'] = 'play'
         # self.controls['💟'] = 'playlist add'
 
     async def indexer(self, ctx, ctrl):
