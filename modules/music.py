@@ -232,8 +232,6 @@ class MusicQueue(asyncio.Queue):
                 return False
             elif u not in self.player.channel.members:
                 return False
-            elif ctx.author.voice.mute or ctx.author.voice.deaf:
-                return False
             return True
 
         while self.controller_message:
