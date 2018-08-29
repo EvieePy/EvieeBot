@@ -113,15 +113,14 @@ class Botto(commands.Bot):
         self.categories = {}
         self.extensions_other = {}
 
+        self.fkey = Fernet(config.get('ENCRYPTION', '_token').encode())
+
+        super().__init__(command_prefix=get_prefix)
         self.lavalink = pylava.Connection(bot=self,
                                           password='password',
                                           rest_url='http://localhost:2333',
                                           ws_url='ws://localhost:8080')
-
-        self.fkey = Fernet(config.get('ENCRYPTION', '_token').encode())
-
-        super().__init__(command_prefix=get_prefix)
-
+        
     def is_reconnecting(self):
         """Return the bots reconnection state."""
         return self._reconnecting.is_set()
