@@ -13,6 +13,9 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
         self.bot = bot
 
     async def __local_check(self, ctx):
+        if ctx.invoked_with == 'help':
+            return True
+
         if not ctx.guild:
             raise commands.NoPrivateMessage
 

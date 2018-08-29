@@ -52,6 +52,9 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
             await ctx.send(f'I am missing permissions to run this command: ```css\n[{missing}]\n```')
 
     async def __local_check(self, ctx):
+        if ctx.invoked_with == 'help':
+            return True
+
         if not ctx.guild:
             await ctx.send('You are not able to use this command in Private Messages.')
             return False
