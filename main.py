@@ -442,14 +442,6 @@ async def do_restart(ctx):
         config.write(configfile)
 
     await asyncio.sleep(2)
-    cog = bot.get_cog('Music')
-
-    if cog.controllers:
-        embed.description = '<:reset_init:449475270144163840> **`- Waiting for Music Controllers to die...`**'
-        await msg.edit(embed=embed)
-
-    while cog.controllers:
-        await asyncio.sleep(10)
 
     embed.description = '<:reset_off:449475278079524864> **`- Offline...`**'
     embed._colour = discord.Colour(0xc12400)
