@@ -403,7 +403,7 @@ class SpotifyPaginator(SimplePaginator):
         if ctrl == 'stop':
             ctx.bot.loop.create_task(self.stop_controller(self.base))
         elif ctrl == 'play':
-            await ctx.invoke(ctx.bot.get_command('play'), search=self.pages[self.current].extra)
+            await ctx.invoke(ctx.bot.get_command('play'), query=self.pages[self.current].extra)
 
         elif isinstance(ctrl, int):
             self.current += ctrl
