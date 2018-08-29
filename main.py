@@ -38,6 +38,7 @@ import inspect
 import itertools
 import pathlib
 import psutil
+import pylava
 import os
 import sys
 import time
@@ -111,6 +112,11 @@ class Botto(commands.Bot):
         self._last_result = None
         self.categories = {}
         self.extensions_other = {}
+
+        self.lavalink = pylava.Connection(bot=self,
+                                          password='password',
+                                          rest_url='http://localhost:2333',
+                                          ws_url='ws://localhost:8080')
 
         self.fkey = Fernet(config.get('ENCRYPTION', '_token').encode())
 
