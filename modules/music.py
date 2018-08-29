@@ -235,10 +235,14 @@ class MusicQueue(asyncio.Queue):
             return True
 
         while self.controller_message:
+            print('Reaction Controller: Beginning Cycle')
             if self.player.channel is None:
+                print('Reaction Controller: Breaking Cycle')
                 return self.reaction_task.cancel()
 
+            print('Reaction Controller: Waiting for Reaction')
             react, user = await self.bot.wait_for('reaction_add', check=check)
+            print('Reaction Controller: Recognized Reaction')
             control = self.controls.get(str(react))
 
             if control == 'rp':
