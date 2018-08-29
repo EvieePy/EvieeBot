@@ -582,8 +582,12 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await ctx.invoke(self.connect_)
         query = query.strip('<>')
 
-        queue = self.get_queue(ctx)
         player = self.get_player(ctx.guild, ctx)
+
+        if not player.connected:
+            return
+
+        queue = self.get_queue(ctx)
 
         if len(queue.entries) >= 1000:
             return await ctx.send('You have queued the maximum amount of songs!')
