@@ -131,14 +131,16 @@ class MusicQueue(asyncio.Queue):
             if not track.id and track.query:
                 songs = await self.bot.lavalink.query(f'ytsearch:{track.query}')
                 print(songs)
-                if not songs or not songs['tracks']:
+                if not songs:
+                    continue
+                elif not songs['tracks']
                     continue
 
                 try:
                     song = songs['tracks'][0]
                     track = Track(id_=song['track'], info=song['info'], ctx=track.ctx)
                 except Exception as e:
-                    print(e)
+                    continue
 
             self.current = track
             await self.invoke_controller()
