@@ -108,6 +108,8 @@ class MusicQueue(asyncio.Queue):
         """Loop which handles track callback with events."""
         await self.bot.wait_until_ready()
 
+        self.player = self.bot.lavalink.get_player(self.guild_id)
+
         while True:
             print('Loop: Beginning cycle')
 
@@ -145,8 +147,6 @@ class MusicQueue(asyncio.Queue):
             self.current = track
             await self.invoke_controller()
             print('Loop: Invoked controller')
-
-            self.player = self.bot.lavalink.get_player(self.guild_id, ctx=track.ctx)
             print('Loop: Player reset')
 
             try:
