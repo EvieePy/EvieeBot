@@ -745,3 +745,4 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
 
         await self.bot.user.edit(avatar=data)
 
+

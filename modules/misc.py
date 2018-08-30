@@ -54,6 +54,8 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
     async def __local_check(self, ctx):
         if ctx.invoked_with == 'help':
             return True
+        elif ctx.invoked_with == 'invite':
+            return True
 
         if not ctx.guild:
             await ctx.send('You are not able to use this command in Private Messages.')
@@ -339,15 +341,14 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
     @commands.command(name='invite')
     async def get_invite(self, ctx):
         """Invite Eviee to your guild!"""
-
-        # TODO Change IDs
         embed = discord.Embed(colour=0xff69b4, title='Invite Eviee')
         embed.add_field(name='With Permissions', value=
                         '[Click Me!](https://discordapp.com/oauth2/authorize?client_id=319047630048985099&scope=bot'
-                        '&permissions=389409878)')
+                        '&permissions=70642774)')
         embed.add_field(name='Without Permissions', value=
                         '[Click Me!](https://discordapp.com/oauth2/authorize?client_id=319047630048985099&scope=bot'
                         '&permissions=0)')
+
         await ctx.send(embed=embed)
 
     @commands.command(name='tinyurl', cls=utils.EvieeCommand)
