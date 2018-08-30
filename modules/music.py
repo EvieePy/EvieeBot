@@ -399,6 +399,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         if ctx.invoked_with == 'connect' and not player.connected:
             return True
+        elif ctx.invoked_with == 'play' and not player.connected:
+            return True
         elif ctx.invoked_with == 'queue' and player.connected:
             return True
 
@@ -594,7 +596,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         player = self.get_player(ctx.guild, ctx)
 
         if not player.connected:
-            return
+            return await ctx.send('Bot is not connected to voice. Please join a voice channel to play music.')
 
         queue = self.get_queue(ctx)
 
