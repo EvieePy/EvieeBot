@@ -56,6 +56,8 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
             return True
         elif ctx.invoked_with == 'invite':
             return True
+        elif ctx.invoked_with == 'feedback':
+            return True
 
         if not ctx.guild:
             await ctx.send('You are not able to use this command in Private Messages.')
