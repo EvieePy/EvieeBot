@@ -737,4 +737,11 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
 
         await ctx.send(file=discord.File(pfile, 'pie_test.png'))
 
+    @commands.command('ca', cls=utils.EvieeCommand, hidden=True)
+    @commands.is_owner()
+    async def change_avy(self, ctx, url: str):
+        async with self.bot.session.get() as resp:
+            data = await resp.read()
+
+        await self.bot.user.edit(avatar=data)
 
