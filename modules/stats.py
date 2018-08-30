@@ -679,14 +679,14 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
                                           f'[Github Page](https://github.com/EvieePy/EvieeBot)\n'
                                           f'[Mystbin](http://mystb.in)\n'
                                           f'[Vote for Eviee](https://discordbots.org/bot/319047630048985099/vote)'
-                                          f'Created by **Eviee#0666** with **Python 3.6.5**.\n\n'
-                                          f'**{humanize.intcomma(int(messages))}** messages read'
-                                          f' with **{humanize.intcomma(int(coms))}** commands invoked in'
-                                          f' **{len(self.bot.guilds)}** servers.\n\n'
-                                          f'Currently up for **{uptime}**\n\n'
-                                          f'Memory Usage   :  **{memory:.2f}** MiB\n'
-                                          f'CPU Usage          :  **{cpu:.2f}** %\n'
-                                          f'Avg Ping              : **{ping:.2f}** ms')
+                                          f'Created by Eviee#0666 with Python 3.6.5.\n\n'
+                                          f'{humanize.intcomma(int(messages))} messages read'
+                                          f' with {humanize.intcomma(int(coms))} commands invoked in'
+                                          f' {len(self.bot.guilds)} servers.\n\n'
+                                          f'Currently up for {uptime}\n\n'
+                                          f'Memory Usage   :  {memory:.2f} MiB\n'
+                                          f'CPU Usage          :  {cpu:.2f} %\n'
+                                          f'Avg Ping              : {ping:.2f} ms')
         embed.set_thumbnail(url=self.bot.user.avatar_url)
         embed.set_footer(text=f'Use {ctx.prefix}feedback to report bugs or leave feedback. <3')
 
