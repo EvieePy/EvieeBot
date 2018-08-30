@@ -146,7 +146,7 @@ class MusicQueue(asyncio.Queue):
             await self.invoke_controller()
             print('Loop: Invoked controller')
 
-            self.player = self.bot.lavalink.get_player(self.guild_id)
+            self.player = self.bot.lavalink.get_player(self.guild_id, ctx=track.ctx)
             print('Loop: Player reset')
 
             try:
@@ -705,7 +705,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         if not player.connected:
             await ctx.send('I am not currently connected to voice!')
 
-        if player.paused or player.stopped:
+        if player.paused:
             return
 
         if await self.has_perms(ctx, manage_guild=True):
@@ -763,9 +763,6 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         if not player.connected:
             return await ctx.send('I am not currently connected to voice!')
-
-        if player.stopped:
-            return
 
         if await self.has_perms(ctx, manage_guild=True):
             await ctx.send(f'{ctx.author.mention} has skipped the song as an admin or DJ.', delete_after=25)
