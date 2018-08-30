@@ -133,7 +133,7 @@ class MusicQueue(asyncio.Queue):
                 print(songs)
                 if not songs:
                     continue
-                elif not songs['tracks']
+                elif not songs['tracks']:
                     continue
 
                 try:
