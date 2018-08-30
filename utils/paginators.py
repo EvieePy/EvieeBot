@@ -283,9 +283,12 @@ class HelpPaginator(SimplePaginator):
     async def paginate(self, ctx):
         valid_cogs = [cog for cog in ctx.bot.cogs if ctx.bot.get_cog_commands(cog) and cog not in self.invalid_cogs]
 
-        first = discord.Embed(title='Eviee - Help', description=
+        first = discord.Embed(title='Eviee - Help',
+                              description=
                                     'For more help and resources visit:\n\n'
-                                    '[Official Server](http://discord.gg/Hw7RTtr)\n\n', colour=0xffb2b2)
+                                    '[Official Server](http://discord.gg/Hw7RTtr)\n'
+                                    '[Vote for Eviee](https://discordbots.org/bot/319047630048985099/vote)\n',
+                              colour=0xffb2b2)
 
         howto = discord.Embed(title='Help - How-to',
                               description='⏮ - `To beginning`:\n'

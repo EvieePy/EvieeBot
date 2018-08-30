@@ -13,6 +13,7 @@ import textwrap
 import time
 import timeit
 import traceback
+import typing
 from contextlib import redirect_stdout
 
 import utils
@@ -98,13 +99,13 @@ class Admin(metaclass=utils.MetaCog, private=True):
 
     @commands.command(name='block', aliases=['blocc'], cls=utils.AbstractorGroup, abstractors=['add', 'remove', 'list'],
                       invoke_without_command=True)
-    async def blocks(self, ctx, target: utils.Union(discord.Member, discord.User), *,
+    async def blocks(self, ctx, target: typing.Union[discord.Member, discord.User], *,
                      when: utils.UserFriendlyTime(commands.clean_content, default='something')):
         if not ctx.invoked_subcommand:
             await ctx.invoke(self.bot.get_command('block add'), target, when=when)
 
     @blocks.command(name='add')
-    async def block_add(self, ctx, target: discord.Member, *,
+    async def block_add(self, ctx, target: typing.Union[discord.Member, discord.User], *,
                         when: utils.UserFriendlyTime(commands.clean_content, default='something')):
 
         ret = await self.bot.pool.fetchval("""SELECT id FROM blocks WHERE id IN ($1)""", target.id)
@@ -127,7 +128,7 @@ class Admin(metaclass=utils.MetaCog, private=True):
             await ctx.send("Reason is a required argument that's missing derpy.")
 
     @blocks.command(name='remove')
-    async def block_remove(self, ctx, *, target: utils.Union(discord.Member, discord.User)):
+    async def block_remove(self, ctx, *, target: typing.Union[discord.Member, discord.User]):
         count = await self.bot.pool.execute("""DELETE FROM blocks WHERE id IN ($1)""", target.id)
 
         if count == 'DELETE 0':
