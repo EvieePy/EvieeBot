@@ -3,6 +3,7 @@ from discord.ext import commands
 
 import asyncio
 import datetime
+import dbl
 import functools
 import humanize
 import inspect
@@ -44,13 +45,16 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
     """Want to know some boring stuff about the bot, yourself and others?
     These are your commands... In depth information is only an Eviee away!"""
 
-    __slots__ = ('bot', 'statuses')
+    __slots__ = ('bot', 'statuses', 'dbl')
 
     def __init__(self, bot):
         self.bot = bot
         self.statuses = {'online': '<:dot_online:420205881200738314>', 'offline': '<:dot_invis:420205881272172544>',
                          'dnd': '<:dot_dnd:420205879883726858>', 'idle': '<:dot_idle:420205880508809218>'}
 
+        self.dbl = dbl.Client(self.bot, self.bot._config.get("DBL", "value"))
+
+        self.bot.loop.create_task(self.update_dbl())
         self.bot.loop.create_task(self.expiry_check())
 
     async def get_perms(self, ctx, target: utils.Union(discord.Member, discord.Role), *, previous=None):
@@ -745,4 +749,14 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
 
         await self.bot.user.edit(avatar=data)
 
+    async def update_dbl(self):
+        await self.bot.wait_until_ready()
+
+        while True:
+            try:
+                await self.dbl.post_server_count()
+            except Exception:
+                pass
+
+            await asyncio.sleep(1000)
 
