@@ -54,7 +54,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
 
         # self.dbl = dbl.Client(self.bot, self.bot._config.get("DBL", "value"))
 
-        # self.bot.loop.create_task(self.update_dbl())
+        self.bot.loop.create_task(self.update_dbl())
         self.bot.loop.create_task(self.expiry_check())
 
     async def get_perms(self, ctx, target: utils.Union(discord.Member, discord.Role), *, previous=None):
@@ -750,8 +750,6 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         await self.bot.user.edit(avatar=data)
 
     async def update_dbl(self):
-        await self.bot.wait_until_ready()
-
         while True:
             try:
                 await self.dbl.post_server_count()
