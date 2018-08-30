@@ -332,40 +332,37 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         hook = discord.Webhook.partial(id=wh_id, token=wh_token, adapter=discord.AsyncWebhookAdapter(self.bot.session))
         return hook
 
+    @utils.backoff_loop()
     async def inactivity_check(self):
         await self.bot.wait_until_ready()
 
-        while not self.bot.is_closed():
-            await asyncio.sleep(20)
+        await asyncio.sleep(20)
 
-            inactive = []
-            for q in self.queues.values():
-                if q.inactive:
-                    inactive.append(q)
+        inactive = []
+        for q in self.queues.values():
+            if q.inactive:
+                inactive.append(q)
 
-            if not inactive:
-                continue
+        for q in inactive:
+            print(f'Inactivty Check: Inactive Queue {q.guild_id}')
+            await q.destroy_controller()
 
-            for q in inactive:
-                print(f'Inactivty Check: Inactive Queue {q.guild_id}')
-                await q.destroy_controller()
+            try:
+                q.player_task.cancel()
+            except Exception:
+                pass
 
-                try:
-                    q.player_task.cancel()
-                except Exception:
-                    pass
+            try:
+                q.updater_task.cancel()
+            except Exception:
+                pass
 
-                try:
-                    q.updater_task.cancel()
-                except Exception:
-                    pass
+            try:
+                await q.player.disconnect()
+            except AttributeError:
+                pass
 
-                try:
-                    await q.player.disconnect()
-                except AttributeError:
-                    pass
-
-                self.queues.pop(q.guild_id)
+            self.queues.pop(q.guild_id)
 
     async def delete_message(self, ctx):
         queue = self.get_queue(ctx)
