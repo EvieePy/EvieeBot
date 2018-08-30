@@ -52,7 +52,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         self.statuses = {'online': '<:dot_online:420205881200738314>', 'offline': '<:dot_invis:420205881272172544>',
                          'dnd': '<:dot_dnd:420205879883726858>', 'idle': '<:dot_idle:420205880508809218>'}
 
-        # self.dbl = dbl.Client(self.bot, self.bot._config.get("DBL", "value"))
+        self.dbl = dbl.Client(self.bot, self.bot._config.get("DBL", "value"))
 
         self.bot.loop.create_task(self.update_dbl())
         self.bot.loop.create_task(self.expiry_check())
