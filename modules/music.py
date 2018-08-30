@@ -157,10 +157,13 @@ class MusicQueue(asyncio.Queue):
 
             print('Loop: Invoked controller')
 
+            await asyncio.sleep(0.1)
+            player = self.player = self.bot.lavalink.get_player(self.guild_id)
+            
             try:
-                await self.player.play(track.id)
-            except Exception:
-                pass
+                await player.play(track.id)
+            except Exception as e:
+                print(e)
 
             print('Loop: Waiting for event')
 
