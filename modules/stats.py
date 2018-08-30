@@ -681,7 +681,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
                                           f'[Vote for Eviee](https://discordbots.org/bot/319047630048985099/vote)'
                                           f'Created by **Eviee#0666** with **Python 3.6.5**.\n\n'
                                           f'**{humanize.intcomma(int(messages))}** messages read'
-                                          f' with **{humanize.incomma(int(coms))}** commands invoked in'
+                                          f' with **{humanize.intcomma(int(coms))}** commands invoked in'
                                           f' **{len(self.bot.guilds)}** servers.\n\n'
                                           f'Currently up for **{uptime}**\n\n'
                                           f'Memory Usage   :  **{memory:.2f}** MiB\n'
