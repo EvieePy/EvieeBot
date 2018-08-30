@@ -263,3 +263,29 @@ class Admin(metaclass=utils.MetaCog, private=True):
             return await ctx.send(f'**There was an error running your timeit:**\n```prolog\n{e}\n```')
 
         await ctx.send(f'```ini\nTimeit Results ({number}x):\n\n[Statement]\n{statement}\n\n[Result]\n{result}\n```')
+
+    @commands.command(name='players', cls=utils.EvieeCommand)
+    @commands.is_owner()
+    async def get_players(self, ctx):
+        cog = self.bot.get_cog('Music')
+        tracks = 0
+        pages = []
+
+        for queue in cog.queues.values():
+            guild = self.bot.get_guild(queue.guild_id)
+            tracks += len(queue.entries)
+
+            gembed = discord.Embed(title=guild.name, description=f'Now Playing:\n```\n{str(queue.current)}\n```')
+            gembed.add_field(name='Tracks', value=f'{len(queue.entries)}')
+            gembed.add_field(name='DJ', value=str(queue.dj))
+            gembed.set_thumbnail(url=guild.icon_url)
+
+            pages.append(gembed)
+
+        embed = discord.Embed(title='Active Music Queues', description=f'Total  : {len(cog.queues)}\n'
+                                                                       f'Tracks : {tracks}')
+
+        pages = [embed] + pages
+        await ctx.paginate(extras=pages)
+
+
