@@ -305,7 +305,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
                         pass
 
     @commands.command(name='feedback', aliases=['fb', 'suggest'], cls=utils.EvieeCommand)
-    @commands.cooldown(2, 900, commands.BucketType.user)
+    @commands.cooldown(1, 180, commands.BucketType.user)
     async def feedback_(self, ctx, *, feedback: str=None):
         """Leave feedback regarding Eviee.
 
@@ -325,20 +325,32 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
             {ctx.prefix}feedback <3 Eviee
         """
-        if not feedback:
-            return await ctx.send("You haven't left any feedback. Try again!")
-        if len(feedback) > 1024:
-            return await ctx.send('Feedback can not be longer than 1024 characters.')
+        msg = await ctx.send('What would you like to report/feedback on?')
 
-        embed = discord.Embed(title=f'Feedback',
-                              description=f'```ini\n'
-                                          f'Guild: {ctx.guild}(ID: {ctx.guild.id})\n'
-                                          f'User : {ctx.author}(ID: {ctx.author.id})\n```',
-                              colour=0xff69b4)
-        embed.add_field(name='Message', value=feedback)
+        def check(message):
+            return message.author.id == ctx.author.id
+
+        try:
+            report = await self.bot.wait_for('message', check=check, timeout=180)
+        except asyncio.TimeoutError:
+            return await msg.delete()
+
+        embed = discord.Embed(title=f'Bug Report/Feedback', colour=0xffae42,
+                              description=f'```ini\n{report.content}\n```')
+        if ctx.guild:
+            embed.add_field(name='Guild', value=f'{ctx.guild.name}({ctx.guild.id})')
+        else:
+            embed.add_field(name='Private Message', value='True')
+
+        embed.add_field(name='User', value=f'{ctx.author}({ctx.author.id})')
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+        embed.set_footer(text='Received ').timestamp = datetime.datetime.utcnow()
+        embed.set_thumbnail(url=ctx.author.avatar_url)
+
+        await ctx.send('Thanks your report has been submitted! You can report again in 3 minutes.', delete_after=45)
+        await msg.delete()
         await self.fb_chan.send(embed=embed)
 
-        await ctx.send(f'Thanks {ctx.author.display_name}. Your feedback has been received.', delete_after=20)
 
     @commands.command(name='invite')
     async def get_invite(self, ctx):
