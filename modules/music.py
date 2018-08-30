@@ -149,7 +149,11 @@ class MusicQueue(asyncio.Queue):
             self.player = self.bot.lavalink.get_player(self.guild_id)
             print('Loop: Player reset')
 
-            await self.player.play(track.id)
+            try:
+                await self.player.play(track.id)
+            except Exception:
+                pass
+            
             print('Loop: Waiting for event')
 
             await self.next.wait()
