@@ -173,7 +173,7 @@ class MusicQueue(asyncio.Queue):
 
         player = self.bot.lavalink.get_player(self.guild_id)
 
-        embed = discord.Embed(title='Music Controller', description=f'Now Playing:```\n{track.title}\n```',
+        embed = discord.Embed(title='Music Controller (Beta)', description=f'Now Playing:```\n{track.title}\n```',
                               colour=0x38fab3)
         embed.set_thumbnail(url=track.thumb)
 
