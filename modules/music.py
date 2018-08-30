@@ -1071,7 +1071,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         embed.add_field(name='Guild', value=f'{ctx.guild.name}({ctx.guild.id})')
         embed.add_field(name='User', value=f'{ctx.author}({ctx.author.id})')
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        embed.set_footer(text='Received ').timestamp(datetime.datetime.utcnow())
+        embed.set_footer(text='Received ').timestamp = datetime.datetime.utcnow()
+        embed.set_thumbnail(url=ctx.author.avatar_url)
 
         await self.webhook.send(embed=embed)
 
