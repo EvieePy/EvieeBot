@@ -108,7 +108,7 @@ class MusicQueue(asyncio.Queue):
         """Loop which handles track callback with events."""
         await self.bot.wait_until_ready()
 
-        while not self.bot.is_closed():
+        while True:
             print('Loop: Beginning cycle')
 
             self.next.clear()
