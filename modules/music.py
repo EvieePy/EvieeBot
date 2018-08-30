@@ -323,6 +323,15 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         self.bot.loop.create_task(self.inactivity_check())
         self.bot.loop.create_task(self.refresh_token())
 
+    @property
+    def webhook(self):
+        config = self.bot._config
+
+        wh_id = config.get('WH', 'f_id')
+        wh_token = config.get('WH', 'f_key')
+        hook = discord.Webhook.partial(id=wh_id, token=wh_token, adapter=discord.AsyncWebhookAdapter(self.bot.session))
+        return hook
+
     async def inactivity_check(self):
         await self.bot.wait_until_ready()
 
@@ -392,9 +401,6 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         if ctx.author not in player.channel.members:
             return False
-        elif ctx.author.voice.mute or ctx.author.voice.deaf:
-            return False
-
         return True
 
     async def on_voice_state_update(self, member, before, after):
@@ -1061,15 +1067,13 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             return await msg.delete()
 
         embed = discord.Embed(title=f'Bug Report/Feedback', colour=0xffae42,
-                              description=f'```ini\n'
-                                          f'Guild: {ctx.guild.name}({ctx.guild.id})\n'
-                                          f'User : {ctx.author}({ctx.author.id})\n'
-                                          f'```')
+                              description=f'```ini\n{report.content}\n```')
+        embed.add_field(name='Guild', value=f'{ctx.guild.name}({ctx.guild.id})')
+        embed.add_field(name='User', value=f'{ctx.author}({ctx.author.id})')
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        embed.add_field(name='Message', value=f'```\n{report.content}```')
+        embed.set_footer(text='Received ').timestamp(datetime.datetime.utcnow())
 
-        chan = self.bot.get_channel(352013640691351552)
-        await chan.send(embed=embed)
+        await self.webhook.send(embed=embed)
 
         await ctx.send('Thanks your report has been submitted! You can report again in 3 minutes.', delete_after=45)
         await msg.delete()
