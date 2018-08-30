@@ -288,4 +288,15 @@ class Admin(metaclass=utils.MetaCog, private=True):
         pages = [embed] + pages
         await ctx.paginate(extras=pages)
 
+    @commands.command(name='respond', cls=utils.EvieeCommand)
+    @commands.is_owner()
+    async def respond(self, ctx, user: typing.Union[discord.Member, discord.User], *, info: str):
+        try:
+            await user.send(f'Hello thanks for the feedback!\n\n{info}')
+        except discord.HTTPException:
+            return await ctx.send('Error while responding')
+
+        await ctx.send('Response sent')
+
+
 

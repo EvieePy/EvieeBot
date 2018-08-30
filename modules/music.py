@@ -153,7 +153,7 @@ class MusicQueue(asyncio.Queue):
                 await self.player.play(track.id)
             except Exception:
                 pass
-            
+
             print('Loop: Waiting for event')
 
             await self.next.wait()
