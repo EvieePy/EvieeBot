@@ -4,6 +4,7 @@ from discord.ext import commands
 import asyncio
 import datetime
 import functools
+import humanize
 import inspect
 import itertools
 import matplotlib
@@ -11,6 +12,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import psutil
 import numpy as np
+import os
 import pathlib
 from io import BytesIO
 from matplotlib.ticker import MultipleLocator
@@ -660,7 +662,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
 
         await ctx.send(f'**{target} Lines:** `{length}`')
 
-    @commands.command(name='about', cls=utils.EvieeCommand)
+    @commands.command(name='about', cls=utils.EvieeCommand, aliases=['info'])
     async def about_(self, ctx):
         async with self.bot.pool.acquire() as conn:
             coms = await conn.fetchval("""SELECT value FROM stats WHERE item IN('commands')""")
@@ -675,9 +677,11 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
                               description=f'**Useful Links:**\n'
                                           f'[Support Server](https://discord.gg/EVxmWHS)\n'
                                           f'[Github Page](https://github.com/EvieePy/EvieeBot)\n'
-                                          f'[Mystbin](http://mystb.in)\n\n'
+                                          f'[Mystbin](http://mystb.in)\n'
+                                          f'[Vote for Eviee](https://discordbots.org/bot/319047630048985099/vote)'
                                           f'Created by **Eviee#0666** with **Python 3.6.5**.\n\n'
-                                          f'**{messages}** messages read with **{coms}** commands invoked in'
+                                          f'**{humanize.intcomma(int(messages))}** messages read'
+                                          f' with **{humanize.incomma(int(coms))}** commands invoked in'
                                           f' **{len(self.bot.guilds)}** servers.\n\n'
                                           f'Currently up for **{uptime}**\n\n'
                                           f'Memory Usage   :  **{memory:.2f}** MiB\n'
@@ -686,7 +690,19 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         embed.set_thumbnail(url=self.bot.user.avatar_url)
         embed.set_footer(text=f'Use {ctx.prefix}feedback to report bugs or leave feedback. <3')
 
-        await ctx.send(embed=embed)
+        cmd = r'git show -s HEAD~5..HEAD --format="[{}](https://github.com/EvieePy/EvieeBot/commit/%H) %s (%cr)"'
+        if os.name == 'posix':
+            cmd = cmd.format(r'\`%h\`')
+        else:
+            cmd = cmd.format(r'`%h`')
+
+        try:
+            revision = os.popen(cmd).read().strip()
+        except OSError:
+            revision = 'Could not fetch due to memory error. Sorry.'
+
+        gembed = discord.Embed(title='Latest Revisions:', description=revision)
+        await ctx.paginate(extras=[embed, gembed])
 
     def make_pie(self):
 
