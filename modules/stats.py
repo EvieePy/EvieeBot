@@ -678,7 +678,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
                                           f'[Support Server](https://discord.gg/EVxmWHS)\n'
                                           f'[Github Page](https://github.com/EvieePy/EvieeBot)\n'
                                           f'[Mystbin](http://mystb.in)\n'
-                                          f'[Vote for Eviee](https://discordbots.org/bot/319047630048985099/vote)'
+                                          f'[Vote for Eviee](https://discordbots.org/bot/319047630048985099/vote)\n'
                                           f'Created by Eviee#0666 with Python 3.6.5.\n\n'
                                           f'{humanize.intcomma(int(messages))} messages read'
                                           f' with {humanize.intcomma(int(coms))} commands invoked in'
