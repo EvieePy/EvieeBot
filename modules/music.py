@@ -130,24 +130,32 @@ class MusicQueue(asyncio.Queue):
                 print('Loop: Track is dead... Restarting cycle')
                 continue
 
-            if not track.id and track.query:
+            if not track.id:
+                print('Loop: No track ID')
                 songs = await self.bot.lavalink.query(f'ytsearch:{track.query}')
-                print(songs)
+
                 if not songs:
+                    print('Loop: No songs found continuing')
                     continue
                 elif not songs['tracks']:
+                    print('Loop: No songs found continuing')
                     continue
 
                 try:
                     song = songs['tracks'][0]
                     track = Track(id_=song['track'], info=song['info'], ctx=track.ctx)
                 except Exception as e:
+                    print(f'Loop: {e}')
                     continue
 
             self.current = track
-            await self.invoke_controller()
+
+            try:
+                await self.invoke_controller()
+            except Exception as e:
+                print(f'Loop: {e}')
+
             print('Loop: Invoked controller')
-            print('Loop: Player reset')
 
             try:
                 await self.player.play(track.id)
