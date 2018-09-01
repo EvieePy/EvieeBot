@@ -191,7 +191,7 @@ class MusicQueue(asyncio.Queue):
         self.next.set()
         print('Callback: SET')
 
-    async def invoke_control'ler(self, track: Track=None):
+    async def invoke_controller(self, track: Track=None):
         if not track:
             track = self.current
 
