@@ -164,6 +164,14 @@ class MusicQueue(asyncio.Queue):
                 player.track_callback = self.callback
                 
             self.bot.loop.create_task(player.play(track.id))
+            await asyncio.sleep(1)
+            
+            if player.stopped:
+                self.bot.lavalink._players.pop(self.guild_id)
+                player = self.player = self.bot.lavalink.get_player(self.guild_id)
+                
+                player.track_callback = self.callback
+                self.bot.loop.create_task(player.play(track.id))
 
             print('Loop: Waiting for event')
 
