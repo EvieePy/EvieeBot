@@ -186,6 +186,7 @@ class MusicQueue(asyncio.Queue):
             self.repeats.clear()
 
     def callback(self, player):
+        print('Callback')
         self.next.set()
 
     async def invoke_controller(self, track: Track=None):
@@ -794,9 +795,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
     async def do_skip(self, ctx):
         player = self.get_player(ctx.guild, ctx)
-        queue = self.get_queue(ctx)
-        # await player.stop()
-        queue.callback()
+        await player.stop()
 
     @commands.command(name='stop', cls=utils.EvieeCommand)
     @commands.cooldown(2, 30, commands.BucketType.guild)
