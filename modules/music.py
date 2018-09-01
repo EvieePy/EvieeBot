@@ -118,7 +118,9 @@ class MusicQueue(asyncio.Queue):
 
             try:
                 with async_timeout.timeout(300):
+                    print('Loop: Waiting for track')
                     track = await self.get()
+                    print(f'Loop: {track}')
             except asyncio.TimeoutError:
                 self.inactive = True
                 continue
@@ -156,8 +158,6 @@ class MusicQueue(asyncio.Queue):
                 print(f'Loop: {e}')
 
             print('Loop: Invoked controller')
-
-            await asyncio.sleep(0.1)
             
             player = self.player = self.bot.lavalink.get_player(self.guild_id)
             if not player.track_callback:
@@ -167,6 +167,7 @@ class MusicQueue(asyncio.Queue):
             await asyncio.sleep(1)
             
             if player.stopped:
+                print('Loop: Player was stopped')
                 self.bot.lavalink._players.pop(self.guild_id)
                 player = self.player = self.bot.lavalink.get_player(self.guild_id)
                 
@@ -188,8 +189,9 @@ class MusicQueue(asyncio.Queue):
     def callback(self, player):
         print('Callback')
         self.next.set()
+        print('Callback: SET')
 
-    async def invoke_controller(self, track: Track=None):
+    async def invoke_control'ler(self, track: Track=None):
         if not track:
             track = self.current
 
