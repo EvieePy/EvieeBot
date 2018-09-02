@@ -36,6 +36,7 @@ import datetime
 import importlib
 import inspect
 import itertools
+import lavalink
 import pathlib
 import psutil
 import pylava
@@ -100,7 +101,7 @@ class Botto(commands.Bot):
         self.owners = (402159684724719617, 214925855359631360)
         self.starttime = datetime.datetime.utcnow()
 
-        self.defaults = {'eviee ', 'eviee pls ', '>>', 'eviee pls'}  # Prefix Defaults
+        self.defaults = {'e..'}  # Prefix Defaults
         self.lru_prefix = utils.EvieeLRU(name='Prefix LRU', limit=120)
         self.lru_blocks = utils.EvieeLRU(name='Blocks LRU', limit=500)
         self._wspings = deque(maxlen=60)
@@ -118,8 +119,10 @@ class Botto(commands.Bot):
         super().__init__(command_prefix=get_prefix)
         self.lavalink = pylava.Connection(bot=self,
                                           password=self._config.get("LL", "value"),
-                                          rest_url='http://localhost:2333',
-                                          ws_url='ws://localhost:8080')
+                                          rest_url='http://127.0.0.1:2333',
+                                          ws_url='ws://127.0.0.1:8080')
+
+        """self.lavalink = lavalink.Client(bot=self, password=self._config.get("LL", "value"), loop=self.loop)"""
 
     def is_reconnecting(self):
         """Return the bots reconnection state."""
@@ -157,7 +160,6 @@ class Botto(commands.Bot):
 
         await asyncio.sleep(60)
 
-    @utils.evieeloads
     async def load_cache(self):
         pass
 
@@ -308,6 +310,10 @@ class Botto(commands.Bot):
 
         if not self.initialised:
             self.initialised = True
+
+            for guild in self.guilds:
+                self.lavalink.get_player(guild.id)
+
             print(f'Total Startup: {datetime.datetime.utcnow() - self.starttime}')
             await self.change_presence(activity=
                                        discord.Activity(name='the world go by...',

@@ -14,9 +14,8 @@ import time
 
 import utils
 
-
 rurl = re.compile('https?:\/\/(?:www\.)?.+')
-surl = re.compile('https:\/\/open.spotify.com?.+playlist\/(.+)\?')
+surl = re.compile('https:\/\/open.spotify.com?.+playlist\/([a-zA-Z0-9]+)')
 
 
 class Track:
@@ -73,6 +72,7 @@ class MusicQueue(asyncio.Queue):
         self.updating = False
         self.update = False
         self.inactive = False
+        self.playing = False
 
         self.pauses = set()
         self.resumes = set()
@@ -158,25 +158,21 @@ class MusicQueue(asyncio.Queue):
                 print(f'Loop: {e}')
 
             print('Loop: Invoked controller')
-            
+
             player = self.player = self.bot.lavalink.get_player(self.guild_id)
             if not player.track_callback:
                 player.track_callback = self.callback
-                
-            self.bot.loop.create_task(player.play(track.id))
-            await asyncio.sleep(1)
-            
-            if player.stopped:
-                print('Loop: Player was stopped')
-                self.bot.lavalink._players.pop(self.guild_id)
-                player = self.player = self.bot.lavalink.get_player(self.guild_id)
-                
-                player.track_callback = self.callback
-                self.bot.loop.create_task(player.play(track.id))
+
+            while not player.connected:
+                await asyncio.sleep(0.1)
+
+            self.playing = True
+            await player.play(track.id)
 
             print('Loop: Waiting for event')
 
             await self.next.wait()
+            self.playing = False
             print('Loop: Event set')
 
             self.pauses.clear()
@@ -186,12 +182,18 @@ class MusicQueue(asyncio.Queue):
             self.skips.clear()
             self.repeats.clear()
 
-    def callback(self, player):
+    async def callback(self, player, skip: bool=False):
         print('Callback')
+
+        if skip:
+            await player.stop()
+        elif not player.playing:
+            return
+
         self.next.set()
         print('Callback: SET')
 
-    async def invoke_controller(self, track: Track=None):
+    async def invoke_controller(self, track: Track = None):
         if not track:
             track = self.current
 
@@ -539,7 +541,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         pass
 
     @commands.command(name='connect', aliases=['join', 'move'], cls=utils.EvieeCommand)
-    async def connect_(self, ctx, *, channel: discord.VoiceChannel=None):
+    async def connect_(self, ctx, *, channel: discord.VoiceChannel = None):
         """Connect to voice.
 
         Parameters
@@ -566,7 +568,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await player.connect(channel.id)
 
     async def refresh_token(self):
-        auth = base64.b64encode(f'd20f6b5146b6493fb1133183a6eec6b3:{self.bot._config.get("SPOTIFY", "secret")}'.encode())
+        auth = base64.b64encode(
+            f'd20f6b5146b6493fb1133183a6eec6b3:{self.bot._config.get("SPOTIFY", "secret")}'.encode())
         headers = {'Authorization': f'Basic {auth.decode()}',
                    'Content-Type': "application/x-www-form-urlencoded"}
 
@@ -680,7 +683,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             await ctx.send(f'```ini\nAdded {song["info"]["title"]} to the Queue\n```', delete_after=15)
             await queue.put(Track(id_=song['track'], info=song['info'], ctx=ctx))
 
-        if queue.controller_message and not player.stopped:
+        if queue.controller_message:
             await queue.invoke_controller()
 
     @commands.command(name='now_playing', aliases=['np', 'current', 'currentsong'], cls=utils.EvieeCommand)
@@ -797,7 +800,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
     async def do_skip(self, ctx):
         player = self.get_player(ctx.guild, ctx)
-        await player.stop()
+        queue = self.get_queue(ctx)
+        await queue.callback(player, skip=True)
 
     @commands.command(name='stop', cls=utils.EvieeCommand)
     @commands.cooldown(2, 30, commands.BucketType.guild)
@@ -1133,7 +1137,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await ctx.invoke(self.favourites_list)
 
     @favourites_.command(name='add')
-    async def favourites_add(self, ctx, *, query: str=None):
+    async def favourites_add(self, ctx, *, query: str = None):
         if query:
             query = query.strip('<>')
 
