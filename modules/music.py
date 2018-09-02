@@ -183,14 +183,6 @@ class MusicQueue(asyncio.Queue):
             self.repeats.clear()
 
     async def callback(self, player):
-        print('Callback')
-        if not player.playing:
-            return
-
-        self.next.set()
-        print('Callback: SET')
-
-    async def skip(self, player):
         await player.stop()
 
         self.next.set()
@@ -804,7 +796,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         player = self.get_player(ctx.guild, ctx)
         queue = self.get_queue(ctx)
 
-        await queue.skip(player)
+        await queue.callback(player)
 
     @commands.command(name='stop', cls=utils.EvieeCommand)
     @commands.cooldown(2, 30, commands.BucketType.guild)
