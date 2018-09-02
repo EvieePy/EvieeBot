@@ -182,12 +182,9 @@ class MusicQueue(asyncio.Queue):
             self.skips.clear()
             self.repeats.clear()
 
-    async def callback(self, player, skip: bool=False):
+    async def callback(self, player):
         print('Callback')
-
-        if skip:
-            await player.stop()
-        elif not player.playing:
+        if not player.playing:
             return
 
         self.next.set()
