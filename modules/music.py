@@ -183,8 +183,6 @@ class MusicQueue(asyncio.Queue):
             self.repeats.clear()
 
     async def callback(self, player):
-        await player.stop()
-
         self.next.set()
 
     async def invoke_controller(self, track: Track = None):
@@ -413,7 +411,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         except KeyError:
             return True
 
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if ctx.invoked_with == 'connect' and not player.connected:
             return True
@@ -473,11 +471,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         return queue
 
-    def get_player(self, guild, ctx=None):
+    def get_player(self, guild):
         player = self.bot.lavalink.get_player(guild.id)
-
-        if not player.track_callback and ctx:
-            player.track_callback = self.get_queue(ctx).callback
 
         return player
 
@@ -498,7 +493,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         return False
 
     async def vote_check(self, ctx, command: str):
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
         queue = self.get_queue(ctx)
 
         vcc = len(player.channel.members) - 1
@@ -517,7 +512,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
     async def do_vote(self, ctx, queue, command: str):
         attr = getattr(queue, command + 's', None)
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if ctx.author.id in attr:
             await ctx.send(f'{ctx.author.mention}, you have already voted to {command}!', delete_after=15)
@@ -548,7 +543,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         """
         await self.delete_message(ctx)
 
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if player.connected:
             return
@@ -612,7 +607,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await ctx.invoke(self.connect_)
         query = query.strip('<>')
 
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             return await ctx.send('Bot is not connected to voice. Please join a voice channel to play music.')
@@ -700,7 +695,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         The player controller contains various information about the current and upcoming songs.
         """
         await self.delete_message(ctx)
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             return
@@ -721,7 +716,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
             {ctx.prefix}pause
         """
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             await ctx.send('I am not currently connected to voice!')
@@ -750,7 +745,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
             {ctx.prefix}resume
         """
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             await ctx.send('I am not currently connected to voice!')
@@ -780,7 +775,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
             {ctx.prefix}skip
         """
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             return await ctx.send('I am not currently connected to voice!')
@@ -793,10 +788,9 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await self.do_vote(ctx, queue, 'skip')
 
     async def do_skip(self, ctx):
-        player = self.get_player(ctx.guild, ctx)
-        queue = self.get_queue(ctx)
+        player = self.get_player(ctx.guild)
 
-        await queue.callback(player)
+        await player.stop()
 
     @commands.command(name='stop', cls=utils.EvieeCommand)
     @commands.cooldown(2, 30, commands.BucketType.guild)
@@ -810,7 +804,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             {ctx.prefix}stop
         """
         await self.delete_message(ctx)
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             return await ctx.send('I am not currently connected to voice!')
@@ -824,7 +818,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
     async def do_stop(self, ctx):
         queue = self.get_queue(ctx)
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         await queue.destroy_controller()
 
@@ -863,7 +857,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             {ctx.prefix}volume 50
         """
         await self.delete_message(ctx)
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             return await ctx.send('I am not currently connected to voice!')
@@ -901,7 +895,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             {ctx.prefix}q
         """
         await self.delete_message(ctx)
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             return await ctx.send('I am not currently connected to voice!')
@@ -920,7 +914,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def remove_songs_(self, ctx, *tracks):
         await self.delete_message(ctx)
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             return await ctx.send('I am not currently connected to voice!')
@@ -963,7 +957,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             {ctx.prefix}mix
         """
         await self.delete_message(ctx)
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             return await ctx.send('I am not currently connected to voice!')
@@ -996,7 +990,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             {ctx.prefix}repeat
         """
         await self.delete_message(ctx)
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             print('Not connected')
@@ -1024,7 +1018,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
     @commands.command(name='vol_up', hidden=True, cls=utils.EvieeCommand)
     async def volume_up(self, ctx):
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             return
@@ -1042,7 +1036,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
     @commands.command(name='vol_down', hidden=True, cls=utils.EvieeCommand)
     async def volume_down(self, ctx):
-        player = self.get_player(ctx.guild, ctx)
+        player = self.get_player(ctx.guild)
 
         if not player.connected:
             return
@@ -1147,7 +1141,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             track = Track(ctx=ctx, id_=song['track'], info=song['info'])
         else:
             queue = self.get_queue(ctx)
-            player = self.get_player(ctx.guild, ctx)
+            player = self.get_player(ctx.guild)
 
             if not queue.current:
                 return await ctx.send('I am not currently playing anything!', delete_after=30)
