@@ -36,7 +36,6 @@ import datetime
 import importlib
 import inspect
 import itertools
-import lavalink
 import pathlib
 import psutil
 import pylava
