@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+import asyncio
+
 import utils
 
 
@@ -166,6 +168,42 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
 
         await ctx.send(f'Successfully banned: **`{dn}`**')
 
+    @commands.command(name='softban', cls=utils.EvieeCommand, aliases=['sb'])
+    @commands.bot_has_permissions(ban_members=True)
+    @commands.has_permissions(ban_members=True)
+    async def do_softban(self, ctx, member: discord.Member, *, reason: str=None):
+        """Soft-Ban a member from your guild.
+
+        Aliases
+        ---------
+            sb
+
+        Parameters
+        ------------
+        member: [Required]
+            The member you wish to soft-ban. This could be either a name, mention or ID.
+
+        reason: str [Optional]
+            Provide a reason for banning the member.
+
+        Examples
+        ----------
+        <prefix>softban <member> <reason>
+
+            {ctx.prefix}softban Noob For being a noob.
+            {ctx.prefix}sb @Noob
+        """
+        dn = str(member)
+
+        try:
+            await ctx.guild.ban(member, reason=reason)
+            await asyncio.sleep(1)
+            await ctx.guild.unban(member, reason=f'Softban - {str(ctx.author)}')
+        except discord.HTTPException:
+            return await ctx.send(f'Soft-Banning `{dn}` has failed. Please try again.')
+
+        await ctx.send(f'Successfully Soft-Banned: **`{dn}`**', delete_after=10)
+
     @commands.command(name='cleanup', cls=utils.EvieeCommand)
     @commands.has_permissions(manage_messages=True)
     async def do_cleanup(self, ctx, limit: int=20):
@@ -227,6 +265,7 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
             await ctx.send('Manage Messages is required to run this command.')
 
     @do_ban.error
+    @do_softban.error
     async def do_ban_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.send(f'{error}')
