@@ -115,7 +115,7 @@ class Botto(commands.Bot):
 
         self.fkey = Fernet(config.get('ENCRYPTION', '_token').encode())
 
-        super().__init__(command_prefix=get_prefix)
+        super().__init__(command_prefix='e..')
         self.lavalink = pylava.Connection(bot=self,
                                           password=self._config.get("LL", "value"),
                                           rest_url='http://127.0.0.1:2333',

@@ -7,12 +7,19 @@ import async_timeout
 import base64
 import datetime
 import itertools
+import logging
 import math
 import random
 import re
 import time
 
 import utils
+
+logger = logging.getLogger('eviee')
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler(filename='eviee.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
 
 rurl = re.compile('https?:\/\/(?:www\.)?.+')
 surl = re.compile('https:\/\/open.spotify.com?.+playlist\/([a-zA-Z0-9]+)')
@@ -52,7 +59,7 @@ class MusicQueue(asyncio.Queue):
         self.guild_id = ctx.guild.id
         super(MusicQueue, self).__init__()
 
-        self.next = asyncio.Event()
+        self.next_event = asyncio.Event()
         self.controller_message = None
         self.controls = {'⏯': 'rp',
                          '⏹': 'stop',
@@ -66,7 +73,6 @@ class MusicQueue(asyncio.Queue):
                          '⚠': 'report'}
         self.current = None
         self.reaction_task = None
-        self.player = None
         self.dj = None
         self.last_seen = None
         self.updating = False
@@ -108,59 +114,49 @@ class MusicQueue(asyncio.Queue):
         """Loop which handles track callback with events."""
         await self.bot.wait_until_ready()
 
-        self.player = self.bot.lavalink.get_player(self.guild_id)
+        self.bot.lavalink.get_player(self.guild_id)
 
         while True:
-            print('Loop: Beginning cycle')
+            logger.debug('Loop: Beginning Cycle')
 
-            self.next.clear()
-            print('Loop: Event cleared')
+            self.next_event.clear()
 
             try:
                 with async_timeout.timeout(300):
-                    print('Loop: Waiting for track')
                     track = await self.get()
-                    print(f'Loop: {track}')
             except asyncio.TimeoutError:
                 self.inactive = True
                 continue
 
             self.inactive = False
-            print('Loop: Retrieved track')
+            logger.debug('Loop: Retrieved track')
 
             if track.is_dead:  # Empty dead tracks
-                print('Loop: Track is dead... Restarting cycle')
+                logger.debug('Loop: Track was dead, restarting cycle')
                 continue
 
             if not track.id:
-                print('Loop: No track ID')
                 songs = await self.bot.lavalink.query(f'ytsearch:{track.query}')
 
                 if not songs:
-                    print('Loop: No songs found continuing')
                     continue
                 elif not songs['tracks']:
-                    print('Loop: No songs found continuing')
                     continue
 
                 try:
                     song = songs['tracks'][0]
                     track = Track(id_=song['track'], info=song['info'], ctx=track.ctx)
                 except Exception as e:
-                    print(f'Loop: {e}')
                     continue
 
             self.current = track
 
-            try:
-                await self.invoke_controller()
-            except Exception as e:
-                print(f'Loop: {e}')
+            await self.invoke_controller()
+            logger.debug('Loop: Invoked controller')
 
-            print('Loop: Invoked controller')
-
-            player = self.player = self.bot.lavalink.get_player(self.guild_id)
+            player = self.bot.lavalink.get_player(self.guild_id)
             if not player.track_callback:
+                logger.info('Loop: Setting callback')
                 player.track_callback = self.callback
 
             while not player.connected:
@@ -168,12 +164,11 @@ class MusicQueue(asyncio.Queue):
 
             self.playing = True
             await player.play(track.id)
+            logger.info('Loop: Initiated Play')
 
-            print('Loop: Waiting for event')
-
-            await self.next.wait()
+            await self.next_event.wait()
             self.playing = False
-            print('Loop: Event set')
+            logger.debug('Loop: Event was set')
 
             self.pauses.clear()
             self.resumes.clear()
@@ -182,8 +177,9 @@ class MusicQueue(asyncio.Queue):
             self.skips.clear()
             self.repeats.clear()
 
-    async def callback(self, player):
-        self.next.set()
+    def callback(self, player, reason):
+        logger.info(f'Callback: {reason}')
+        self.next_event.set()
 
     async def invoke_controller(self, track: Track = None):
         if not track:
@@ -244,6 +240,7 @@ class MusicQueue(asyncio.Queue):
 
     async def reaction_controller(self):
         self.bot.loop.create_task(self.add_reactions())
+        player = self.bot.lavalink.get_player(self.guild_id)
 
         def check(r, u):
             if not self.controller_message:
@@ -252,13 +249,13 @@ class MusicQueue(asyncio.Queue):
                 return False
             elif u.id == self.bot.user.id or r.message.id != self.controller_message.id:
                 return False
-            elif u not in self.player.channel.members:
+            elif u not in player.channel.members:
                 return False
             return True
 
         while self.controller_message:
             print('Reaction Controller: Beginning Cycle')
-            if self.player.channel is None:
+            if player.channel is None:
                 print('Reaction Controller: Breaking Cycle')
                 return self.reaction_task.cancel()
 
@@ -268,7 +265,7 @@ class MusicQueue(asyncio.Queue):
             control = self.controls.get(str(react))
 
             if control == 'rp':
-                if self.player.paused:
+                if player.paused:
                     control = 'resume'
                 else:
                     control = 'pause'
