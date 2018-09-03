@@ -186,8 +186,11 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
         """
         messages = []
         perms = await ctx.hasperms(member=ctx.guild.me, manage_messages=True)
+        controllers = [e.controller_message.id for e in self.bot.get_cog('Music').queues.values()]
 
         async for message in ctx.channel.history(limit=limit):
+            if message.id in controllers:
+                continue
             if message.content.startswith(ctx.prefix) and perms:
                 messages.append(message)
             elif message.author == ctx.guild.me:
