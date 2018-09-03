@@ -277,5 +277,5 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
     async def on_guild_join(self, guild):
         await self.og_chan.send(f'❤ - **{guild.name}**({guild.id}) | Members: {guild.member_count}')
 
-    async def on_guild_leave(self, guild):
+    async def on_guild_remove(self, guild):
         await self.og_chan.send(f'💔 - **{guild.name}**({guild.id}) | Members: {guild.member_count}')
