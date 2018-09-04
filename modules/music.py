@@ -117,7 +117,7 @@ class MusicQueue(asyncio.Queue):
         while True:
             logger.debug('Loop: Beginning Cycle')
 
-            self.next_event.clear()
+            self.locked = True
 
             try:
                 with async_timeout.timeout(300):
@@ -165,7 +165,9 @@ class MusicQueue(asyncio.Queue):
             await player.play(track.id)
             logger.info('Loop: Initiated Play')
 
-            await self.next_event.wait()
+            while self.locked:
+                await asyncio.sleep(0.1)
+                
             self.playing = False
             logger.debug('Loop: Event was set')
 
@@ -181,7 +183,7 @@ class MusicQueue(asyncio.Queue):
 
         if reason == 'STOPPED' or reason == 'FINISHED':
             logger.info(f'Callback: Event set')
-            self.next_event.set()
+            self.locked = False
 
     async def invoke_controller(self, track: Track = None):
         if not track:
