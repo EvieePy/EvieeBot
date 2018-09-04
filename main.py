@@ -310,9 +310,6 @@ class Botto(commands.Bot):
         if not self.initialised:
             self.initialised = True
 
-            for guild in self.guilds:
-                self.lavalink.get_player(guild.id)
-
             print(f'Total Startup: {datetime.datetime.utcnow() - self.starttime}')
             await self.change_presence(activity=
                                        discord.Activity(name='the world go by...',
