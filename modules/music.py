@@ -834,6 +834,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         del self.queues[ctx.guild.id]
 
         await player.disconnect()
+        await asyncio.sleep(2)
         del self.bot.lavalink._players[ctx.guild.id]
 
     @commands.command(name='volume', aliases=['vol'], cls=utils.EvieeCommand)
