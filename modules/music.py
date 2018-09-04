@@ -383,7 +383,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
                 pass
 
             self.queues.pop(q.guild_id)
-            self.bot.lavalink._players.pop(q.guild_id)
+            del self.bot.lavalink._players[q.guild_id]
 
     async def delete_message(self, ctx):
         queue = self.get_queue(ctx)
@@ -831,10 +831,10 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         except Exception:
             pass
 
-        self.queues.pop(ctx.guild.id)
+        del self.queues[ctx.guild.id]
 
         await player.disconnect()
-        self.bot.lavalink._players.pop(ctx.guild.id)
+        del self.bot.lavalink._players[ctx.guild.id]
 
     @commands.command(name='volume', aliases=['vol'], cls=utils.EvieeCommand)
     @commands.cooldown(1, 2, commands.BucketType.guild)
