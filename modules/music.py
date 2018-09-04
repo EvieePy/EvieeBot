@@ -178,7 +178,10 @@ class MusicQueue(asyncio.Queue):
 
     def callback(self, player, reason):
         logger.info(f'Callback: {reason}')
-        self.next_event.set()
+
+        if reason == 'STOPPED' or reason == 'FINISHED':
+            logger.info(f'Callback: Event set')
+            self.next_event.set()
 
     async def invoke_controller(self, track: Track = None):
         if not track:
