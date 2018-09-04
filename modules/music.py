@@ -153,10 +153,7 @@ class MusicQueue(asyncio.Queue):
             logger.debug('Loop: Invoked controller')
 
             player = self.bot.lavalink.get_player(self.guild_id)
-            if not player.track_callback:
-                logger.info('Loop: Setting callback function and initial volume')
-                await player.set_volume(40)
-                player.track_callback = self.callback
+            player.track_callback = self.callback
 
             while not player.connected:
                 await asyncio.sleep(0.1)
