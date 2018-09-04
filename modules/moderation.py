@@ -174,6 +174,8 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
     async def do_softban(self, ctx, member: discord.Member, *, reason: str=None):
         """Soft-Ban a member from your guild.
 
+        Soft bans are similar to kicks, but unlike kicks, messages from the user will also be removed.
+
         Aliases
         ---------
             sb

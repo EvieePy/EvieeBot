@@ -114,8 +114,6 @@ class MusicQueue(asyncio.Queue):
         """Loop which handles track callback with events."""
         await self.bot.wait_until_ready()
 
-        self.bot.lavalink.get_player(self.guild_id)
-
         while True:
             logger.debug('Loop: Beginning Cycle')
 
@@ -137,7 +135,7 @@ class MusicQueue(asyncio.Queue):
 
             if not track.id:
                 songs = await self.bot.lavalink.query(f'ytsearch:{track.query}')
-
+                
                 if not songs:
                     continue
                 elif not songs['tracks']:
@@ -156,7 +154,8 @@ class MusicQueue(asyncio.Queue):
 
             player = self.bot.lavalink.get_player(self.guild_id)
             if not player.track_callback:
-                logger.info('Loop: Setting callback')
+                logger.info('Loop: Setting callback function and initial volume')
+                await player.set_volume(40)
                 player.track_callback = self.callback
 
             while not player.connected:

@@ -100,7 +100,7 @@ class Botto(commands.Bot):
         self.owners = (402159684724719617, 214925855359631360)
         self.starttime = datetime.datetime.utcnow()
 
-        self.defaults = {'e..'}  # Prefix Defaults
+        self.defaults = {'>>', 'eviee pls ', 'eviee '}  # Prefix Defaults
         self.lru_prefix = utils.EvieeLRU(name='Prefix LRU', limit=120)
         self.lru_blocks = utils.EvieeLRU(name='Blocks LRU', limit=500)
         self._wspings = deque(maxlen=60)
