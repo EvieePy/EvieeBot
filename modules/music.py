@@ -154,7 +154,9 @@ class MusicQueue(asyncio.Queue):
             self.current = track
             print(4)
 
-            await self.invoke_controller()
+            await asyncio.sleep(0)  # Fix a race condition with controller invoke
+            if not self.update:
+                await self.invoke_controller()
             logger.debug('Loop: Invoked controller')
 
             print(5)
