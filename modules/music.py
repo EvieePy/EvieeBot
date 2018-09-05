@@ -889,7 +889,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         queue = self.get_queue(ctx)
 
         if not await self.has_perms(ctx, manage_guild=True) and queue.dj.id != ctx.author.id:
-            if (len(player.channel.members) - 1) > 2:
+            if (len(player.connected_channel.members) - 1) > 2:
                 return
 
         await player.set_volume(value)
