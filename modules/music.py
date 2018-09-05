@@ -7,6 +7,7 @@ import async_timeout
 import base64
 import datetime
 import itertools
+import lavalink
 import logging
 import math
 import random
@@ -116,16 +117,19 @@ class MusicQueue(asyncio.Queue):
 
         while True:
             logger.debug('Loop: Beginning Cycle')
+            print(1)
 
             self.next_event.clear()
 
             try:
+                print(2)
                 with async_timeout.timeout(300):
                     track = await self.get()
             except asyncio.TimeoutError:
                 self.inactive = True
                 continue
 
+            print(3)
             self.inactive = False
             logger.debug('Loop: Retrieved track')
 
@@ -134,7 +138,7 @@ class MusicQueue(asyncio.Queue):
                 continue
 
             if not track.id:
-                songs = await self.bot.lavalink.query(f'ytsearch:{track.query}')
+                songs = await self.bot.lavalink.get_tracks(f'ytsearch:{track.query}')
                 
                 if not songs:
                     continue
@@ -148,21 +152,26 @@ class MusicQueue(asyncio.Queue):
                     continue
 
             self.current = track
+            print(4)
 
             await self.invoke_controller()
             logger.debug('Loop: Invoked controller')
 
-            player = self.bot.lavalink.get_player(self.guild_id)
-            if not player.track_callback:
-                logger.info('Loop: Setting callback function and initial volume')
-                await player.set_volume(40)
-                player.track_callback = self.callback
+            print(5)
 
-            while not player.connected:
+            player = self.bot.lavalink.players.get(self.guild_id)
+            while not player.is_connected:
                 await asyncio.sleep(0.1)
 
+            player.current = None
+            player.position = 0
+            player.paused = False
+
+            self.current = track
+            await player._lavalink.ws.send(op='play', guildId=str(self.guild_id), track=track.id)
+            await player._lavalink.dispatch_event(lavalink.TrackStartEvent(self, track))
+
             self.playing = True
-            await player.play(track.id)
             logger.info('Loop: Initiated Play')
 
             await self.next_event.wait()
@@ -176,20 +185,13 @@ class MusicQueue(asyncio.Queue):
             self.skips.clear()
             self.repeats.clear()
 
-    def callback(self, player, reason):
-        logger.info(f'Callback: {reason}')
-
-        if reason == 'STOPPED' or reason == 'FINISHED':
-            logger.info(f'Callback: Event set')
-            self.next_event.set()
-
     async def invoke_controller(self, track: Track = None):
         if not track:
             track = self.current
 
         self.updating = True
 
-        player = self.bot.lavalink.get_player(self.guild_id)
+        player = self.bot.lavalink.players.get(self.guild_id)
 
         embed = discord.Embed(title='Music Controller (Beta)', description=f'Now Playing:```\n{track.title}\n```',
                               colour=0x38fab3)
@@ -242,7 +244,7 @@ class MusicQueue(asyncio.Queue):
 
     async def reaction_controller(self):
         self.bot.loop.create_task(self.add_reactions())
-        player = self.bot.lavalink.get_player(self.guild_id)
+        player = self.bot.lavalink.players.get(self.guild_id)
 
         def check(r, u):
             if not self.controller_message:
@@ -251,13 +253,13 @@ class MusicQueue(asyncio.Queue):
                 return False
             elif u.id == self.bot.user.id or r.message.id != self.controller_message.id:
                 return False
-            elif u not in player.channel.members:
+            elif u not in player.connected_channel.members:
                 return False
             return True
 
         while self.controller_message:
             print('Reaction Controller: Beginning Cycle')
-            if player.channel is None:
+            if player.connected_channel is None:
                 print('Reaction Controller: Breaking Cycle')
                 return self.reaction_task.cancel()
 
@@ -341,8 +343,20 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         self.bot = bot
         self.queues = {}
 
+        self.bot.lavalink.register_hook(self.track_hook)
         self.bot.loop.create_task(self.inactivity_check())
         self.bot.loop.create_task(self.refresh_token())
+
+    async def track_hook(self, event):
+        if isinstance(event, lavalink.TrackEndEvent) or isinstance(event, lavalink.TrackExceptionEvent):
+            try:
+                queue = self.queues[event.player.fetch('guild').id]
+            except KeyError:
+                return
+            else:
+                queue.next_event.set()
+        elif isinstance(event, lavalink.TrackStuckEvent):
+            await event.player.stop()
 
     @property
     def webhook(self):
@@ -378,11 +392,14 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             except Exception:
                 pass
 
+            player = self.bot.lavalink.players.get(q.guild_id)
+
             try:
-                await q.player.disconnect()
+                await player.disconnect()
             except AttributeError:
                 pass
 
+            self.bot.lavalink.players.remove(q.guild_id)
             self.queues.pop(q.guild_id)
 
     async def delete_message(self, ctx):
@@ -412,14 +429,14 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         player = self.get_player(ctx.guild)
 
-        if ctx.invoked_with == 'connect' and not player.connected:
+        if ctx.invoked_with == 'connect' and not player.is_connected:
             return True
-        elif ctx.invoked_with == 'play' and not player.connected:
+        elif ctx.invoked_with == 'play' and not player.is_connected:
             return True
-        elif ctx.invoked_with == 'queue' and player.connected:
+        elif ctx.invoked_with == 'queue' and player.is_connected:
             return True
 
-        if ctx.author not in player.channel.members:
+        if ctx.author not in player.connected_channel.members:
             return False
         return True
 
@@ -429,23 +446,23 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         player = self.get_player(member.guild)
 
-        if not player or not player.connected:
+        if not player or not player.is_connected:
             return
 
-        vcm = player.channel.members
+        vcm = player.connected_channel.members
 
         try:
             queue = self.queues[member.guild.id]
         except KeyError:
             return
 
-        if after.channel == player.channel:
+        if after.channel == player.connected_channel:
             queue.last_seen = None
 
             if queue.dj not in vcm:
                 queue.dj = member
             return
-        elif before.channel != player.channel:
+        elif before.channel != player.connected_channel:
             return
 
         if (len(vcm) - 1) <= 0:
@@ -459,7 +476,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
                     break
 
     def required(self, player):
-        return math.ceil((len(player.channel.members) - 1) / 2.5)
+        return math.ceil((len(player.connected_channel.members) - 1) / 2.5)
 
     def get_queue(self, ctx):
         try:
@@ -471,7 +488,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         return queue
 
     def get_player(self, guild):
-        player = self.bot.lavalink.get_player(guild.id)
+        player = self.bot.lavalink.players.get(guild.id)
+        player.store('guild', guild)
 
         return player
 
@@ -495,7 +513,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         player = self.get_player(ctx.guild)
         queue = self.get_queue(ctx)
 
-        vcc = len(player.channel.members) - 1
+        vcc = len(player.connected_channel.members) - 1
         votes = getattr(queue, command + 's', None)
 
         if vcc < 3:
@@ -544,7 +562,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         player = self.get_player(ctx.guild)
 
-        if player.connected:
+        if player.is_connected:
             return
 
         if not channel:
@@ -608,7 +626,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
+        await asyncio.sleep(1)
+        if not player.is_connected:
             return await ctx.send('Bot is not connected to voice. Please join a voice channel to play music.')
 
         queue = self.get_queue(ctx)
@@ -642,8 +661,10 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
                 await queue.put(Track(id_=None, info={'title': query}, ctx=ctx, query=query))
 
-            if queue.controller_message and not player.stopped:
+            if queue.controller_message and player.is_playing:
                 await queue.invoke_controller()
+            else:
+                queue.update = True
 
             return await ctx.send('Successfully added your Spotify playlist to the queue.', delete_after=20)
 
@@ -652,7 +673,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         print(f'Play: Query = {query}')
 
-        songs = await self.bot.lavalink.query(query)
+        songs = await self.bot.lavalink.get_tracks(query)
         print(f'Play: {songs}')
         if not songs or not songs['tracks']:
             return await ctx.send('No songs were found with that query. Try again.')
@@ -696,7 +717,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await self.delete_message(ctx)
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
+        if not player.is_connected:
             return
 
         queue = self.get_queue(ctx)
@@ -717,7 +738,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         """
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
+        if not player.is_connected:
             await ctx.send('I am not currently connected to voice!')
 
         if player.paused:
@@ -746,10 +767,10 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         """
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
+        if not player.is_connected:
             await ctx.send('I am not currently connected to voice!')
 
-        if not player.paused or player.stopped:
+        if not player.paused:
             return
 
         if await self.has_perms(ctx, manage_guild=True):
@@ -776,7 +797,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         """
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
+        if not player.is_connected:
             return await ctx.send('I am not currently connected to voice!')
 
         if await self.has_perms(ctx, manage_guild=True):
@@ -805,7 +826,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await self.delete_message(ctx)
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
+        if not player.is_connected:
             return await ctx.send('I am not currently connected to voice!')
 
         if await self.has_perms(ctx, manage_guild=True):
@@ -832,8 +853,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             pass
 
         self.queues.pop(ctx.guild.id)
-
         await player.disconnect()
+        self.bot.lavalink.players.remove(ctx.guild.id)
 
     @commands.command(name='volume', aliases=['vol'], cls=utils.EvieeCommand)
     @commands.cooldown(1, 2, commands.BucketType.guild)
@@ -858,7 +879,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await self.delete_message(ctx)
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
+        if not player.is_connected:
             return await ctx.send('I am not currently connected to voice!')
 
         if not 0 < value < 101:
@@ -896,7 +917,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await self.delete_message(ctx)
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
+        if not player.is_connected:
             return await ctx.send('I am not currently connected to voice!')
 
         queue = self.get_queue(ctx)
@@ -915,7 +936,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await self.delete_message(ctx)
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
+        if not player.is_connected:
             return await ctx.send('I am not currently connected to voice!')
 
         queue = self.get_queue(ctx)
@@ -958,7 +979,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await self.delete_message(ctx)
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
+        if not player.is_connected:
             return await ctx.send('I am not currently connected to voice!')
 
         queue = self.get_queue(ctx)
@@ -991,8 +1012,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await self.delete_message(ctx)
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
-            print('Not connected')
+        if not player.is_connected:
             return
 
         queue = self.get_queue(ctx)
@@ -1011,15 +1031,13 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         else:
             queue.entries.appendleft(queue.current)
 
-        print(queue.entries)
-
         queue.update = True
 
     @commands.command(name='vol_up', hidden=True, cls=utils.EvieeCommand)
     async def volume_up(self, ctx):
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
+        if not player.is_connected:
             return
 
         vol = int(math.ceil((player.volume + 10) / 10)) * 10
@@ -1037,7 +1055,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
     async def volume_down(self, ctx):
         player = self.get_player(ctx.guild)
 
-        if not player.connected:
+        if not player.is_connected:
             return
 
         vol = int(math.ceil((player.volume - 10) / 10)) * 10
@@ -1132,7 +1150,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             if not rurl.match(query):
                 query = f'ytsearch:{query}'
 
-            songs = await self.bot.lavalink.query(query)
+            songs = await self.bot.lavalink.get_tracks(query)
             if not songs or not songs['tracks']:
                 return await ctx.send('No songs were found with that query. Please try again.')
 
@@ -1144,7 +1162,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
             if not queue.current:
                 return await ctx.send('I am not currently playing anything!', delete_after=30)
-            if not player.connected:
+            if not player.is_connected:
                 return
             track = queue.current
 
@@ -1168,7 +1186,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             if not rurl.match(query):
                 query = f'ytsearch:{query}'
 
-            songs = await self.bot.lavalink.query(query)
+            songs = await self.bot.lavalink.get_tracks(query)
             if not songs or not songs['tracks']:
                 return await ctx.send('No songs were found with that query. Please try again.')
 

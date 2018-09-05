@@ -36,6 +36,8 @@ import datetime
 import importlib
 import inspect
 import itertools
+import lavalink
+import logging
 import pathlib
 import psutil
 import pylava
@@ -116,12 +118,11 @@ class Botto(commands.Bot):
         self.fkey = Fernet(config.get('ENCRYPTION', '_token').encode())
 
         super().__init__(command_prefix=get_prefix)
-        self.lavalink = pylava.Connection(bot=self,
-                                          password=self._config.get("LL", "value"),
-                                          rest_url='http://127.0.0.1:2333',
-                                          ws_url='ws://127.0.0.1:8080')
-
-        """self.lavalink = lavalink.Client(bot=self, password=self._config.get("LL", "value"), loop=self.loop)"""
+        self.lavalink = lavalink.Client(bot=self,
+                                        password=self._config.get("LL", "value"),
+                                        rest_port=2333, ws_port=8080,
+                                        loop=self.loop,
+                                        log_level=logging.DEBUG)
 
     def is_reconnecting(self):
         """Return the bots reconnection state."""
@@ -309,9 +310,6 @@ class Botto(commands.Bot):
 
         if not self.initialised:
             self.initialised = True
-
-            for guild in self.guilds:
-                self.lavalink.get_player(guild.id)
 
             print(f'Total Startup: {datetime.datetime.utcnow() - self.starttime}')
             await self.change_presence(activity=
