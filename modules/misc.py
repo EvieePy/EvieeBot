@@ -33,7 +33,7 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
      I need a tequila.
      """
 
-    __slots__ = ('bot', 'omdb', 'osu')
+    __slots__ = ('bot', 'omdb', 'osu', 'vcontrols')
 
     def __init__(self, bot):
         self.bot = bot
@@ -565,6 +565,133 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
                                ctx.author.id, name)
 
         await ctx.send(f'Successfully set your osu! account to: `{name}`')
+
+    @commands.command(name='vote', aliases=['yn'], cls=utils.EvieeCommand)
+    async def vote_(self, ctx):
+        try:
+            await ctx.message.delete()
+        except discord.HTTPException:
+            pass
+
+        opener = await ctx.send('What would you like to initiate a vote for?')
+        try:
+            resp = await self.bot.wait_for('message', check=lambda x: x.author.id == ctx.author.id, timeout=300)
+        except asyncio.TimeoutError:
+            return await ctx.send('You took too long to respond. Please try again!')
+
+        desc = resp.content
+
+        try:
+            await resp.delete()
+        except discord.HTTPException:
+            pass
+
+        await opener.delete()
+        msg = await ctx.send(f"**Ok, your question is:** {desc}.\n\n"
+                             f"How long should the vote last? (Enter in seconds from 0(Until closed) to 1800(30 minutes).")
+
+        resp = await self.bot.wait_for('message', check=lambda x: x.author.id == ctx.author.id, timeout=300)
+        await msg.delete()
+
+        try:
+            resp = int(resp.content)
+        except ValueError:
+            return await ctx.send('Invalid time provided. Please try running the command again.')
+
+        embed = discord.Embed(title=f'{desc}?', colour=0xffb347, description='To vote simply use the reactions!')
+        embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
+
+        poll = await ctx.send(embed=embed)
+        Vote(ctx, poll, resp, desc)
+
+
+class Vote:
+
+    def __init__(self, ctx, poll, wait, desc):
+        self.ctx = ctx
+        self.bot = ctx.bot
+        self.poll = poll
+        self.wait = wait
+        self.desc = desc
+        self.event = asyncio.Event()
+
+        self.vcontrols = ('⬆', '⬇', '❎')
+
+        self.do_task = self.bot.loop.create_task(self.do_vote())
+
+    async def do_vote(self):
+        for reaction in self.vcontrols:
+            try:
+                await self.poll.add_reaction(str(reaction))
+            except discord.HTTPException:
+                return
+
+        voted = set()
+        self.ups = 0
+        self.downs = 0
+
+        self.killer = self.bot.loop.create_task(self.kill_vote())
+
+        while not self.bot.is_closed():
+            def check(r, u):
+                if str(r) not in self.vcontrols:
+                    return False
+                elif u.id == self.bot.user.id or r.message.id != self.poll.id:
+                    return False
+                elif u.id in voted and str(r) != '❎':
+                    return False
+                return True
+
+            try:
+                react, user = await self.bot.wait_for('reaction_add', check=check, timeout=3600)
+            except asyncio.TimeoutError:
+                break
+
+            voted.add(user.id)
+
+            if str(react) == '⬆':
+                self.ups += 1
+            elif str(react) == '⬇':
+                self.downs += 1
+            elif str(react) == '❎':
+                if user.id != self.ctx.author.id:
+                    continue
+                await self.poll.delete()
+                break
+            else:
+                continue
+
+            try:
+                await self.poll.remove_reaction(react, user)
+            except discord.HTTPException:
+                pass
+
+        try:
+            self.killer.cancel()
+        except Exception:
+            pass
+
+        embed = discord.Embed(title='Vote Results:', description=self.desc, colour=0xffb347)
+        embed.add_field(name='Up Votes', value=str(self.ups))
+        embed.add_field(name='Down Votes', value=str(self.downs))
+        await self.ctx.send(embed=embed)
+
+    async def kill_vote(self):
+        if self.wait == 0:
+            return
+
+        await asyncio.sleep(self.wait)
+        await self.poll.delete()
+        
+        try:
+            self.do_task.cancel()
+        except Exception:
+            pass
+
+        embed = discord.Embed(title='Vote Results:', description=self.desc, colour=0xffb347)
+        embed.add_field(name='Up Votes', value=str(self.ups))
+        embed.add_field(name='Down Votes', value=str(self.downs))
+        await self.ctx.send(embed=embed)
 
 
 class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lvQq.png'):
