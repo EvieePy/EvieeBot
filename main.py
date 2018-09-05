@@ -117,7 +117,7 @@ class Botto(commands.Bot):
 
         self.fkey = Fernet(config.get('ENCRYPTION', '_token').encode())
 
-        super().__init__(command_prefix=get_prefix)
+        super().__init__(command_prefix='e..')
         self.lavalink = lavalink.Client(bot=self,
                                         password=self._config.get("LL", "value"),
                                         rest_port=2333, ws_port=8080,

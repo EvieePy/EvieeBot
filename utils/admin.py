@@ -297,6 +297,3 @@ class Admin(metaclass=utils.MetaCog, private=True):
             return await ctx.send('Error while responding')
 
         await ctx.send('Response sent')
-
-
-

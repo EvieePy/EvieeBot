@@ -154,7 +154,6 @@ class MusicQueue(asyncio.Queue):
             self.current = track
             print(4)
 
-            await asyncio.sleep(0)  # Fix a race condition with controller invoke
             if not self.update:
                 await self.invoke_controller()
             logger.debug('Loop: Invoked controller')
@@ -694,7 +693,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             await ctx.send(f'```ini\nAdded {song["info"]["title"]} to the Queue\n```', delete_after=15)
             await queue.put(Track(id_=song['track'], info=song['info'], ctx=ctx))
 
-        if queue.controller_message:
+        if queue.controller_message and player.is_playing:
             await queue.invoke_controller()
 
     @commands.command(name='now_playing', aliases=['np', 'current', 'currentsong'], cls=utils.EvieeCommand)
