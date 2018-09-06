@@ -351,7 +351,6 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
         await msg.delete()
         await self.fb_chan.send(embed=embed)
 
-
     @commands.command(name='invite')
     async def get_invite(self, ctx):
         """Invite Eviee to your guild!"""

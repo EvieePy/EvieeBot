@@ -114,22 +114,20 @@ class MusicQueue(asyncio.Queue):
     async def player_loop(self):
         """Loop which handles track callback with events."""
         await self.bot.wait_until_ready()
+        await (self.bot.lavalink.players.get(self.guild_id)).set_volume(40)
 
         while True:
             logger.debug('Loop: Beginning Cycle')
-            print(1)
 
             self.next_event.clear()
 
             try:
-                print(2)
                 with async_timeout.timeout(300):
                     track = await self.get()
             except asyncio.TimeoutError:
                 self.inactive = True
                 continue
 
-            print(3)
             self.inactive = False
             logger.debug('Loop: Retrieved track')
 
@@ -152,13 +150,10 @@ class MusicQueue(asyncio.Queue):
                     continue
 
             self.current = track
-            print(4)
 
             if not self.update:
                 await self.invoke_controller()
             logger.debug('Loop: Invoked controller')
-
-            print(5)
 
             player = self.bot.lavalink.players.get(self.guild_id)
             while not player.is_connected:
@@ -476,7 +471,11 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
                     queue.dj = mem
                     break
 
-    def required(self, player):
+    def required(self, player, invoked_with):
+        if invoked_with == 'stop':
+            if len(player.connected_channel.members) -1 == 2:
+                return 2
+
         return math.ceil((len(player.connected_channel.members) - 1) / 2.5)
 
     def get_queue(self, ctx):
@@ -523,7 +522,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         else:
             votes.add(ctx.author.id)
 
-            if len(votes) >= self.required(player):
+            if len(votes) >= self.required(player, ctx.invoked_with):
                 votes.clear()
                 return True
         return False
