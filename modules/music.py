@@ -114,7 +114,8 @@ class MusicQueue(asyncio.Queue):
     async def player_loop(self):
         """Loop which handles track callback with events."""
         await self.bot.wait_until_ready()
-        await (self.bot.lavalink.players.get(self.guild_id)).set_volume(40)
+        player = self.bot.lavalink.players.get(self.guild_id)
+        await player.set_volume(40)
 
         while True:
             logger.debug('Loop: Beginning Cycle')
