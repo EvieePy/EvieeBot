@@ -13,7 +13,6 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
 
     def __init__(self, bot):
         self.bot = bot
-        self.og_chan = self.bot.get_channel(486156641566457856)
 
     async def __local_check(self, ctx):
         if ctx.invoked_with == 'help':
@@ -277,7 +276,9 @@ class Moderation(metaclass=utils.MetaCog, colour=0xffd0b5, thumbnail='https://i.
             await ctx.send('I require the Ban Members permission.')
 
     async def on_guild_join(self, guild):
-        await self.og_chan.send(f'❤ - **{guild.name}**({guild.id}) | Members: {guild.member_count}')
+        chan = self.bot.get_channel(486156641566457856)
+        await chan.send(f'❤ - **{guild.name}**({guild.id}) | Members: {guild.member_count}')
 
     async def on_guild_remove(self, guild):
-        await self.og_chan.send(f'💔 - **{guild.name}**({guild.id}) | Members: {guild.member_count}')
+        chan = self.bot.get_channel(486156641566457856)
+        await chan.send(f'💔 - **{guild.name}**({guild.id}) | Members: {guild.member_count}')
