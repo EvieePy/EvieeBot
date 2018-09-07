@@ -673,7 +673,12 @@ class MBTI:
 
         while not self.bot.is_closed():
             count += 1
-            react, user = await self.bot.wait_for('reaction_add', check=check)
+
+            try:
+                react, user = await self.bot.wait_for('reaction_add', check=check)
+            except asyncio.TimeoutError:
+                await self.base.delete()
+                return
 
             try:
                 await self.base.remove_reaction(react, user)
