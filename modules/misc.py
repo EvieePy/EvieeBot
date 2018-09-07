@@ -4,6 +4,7 @@ from discord.ext import commands
 import asyncio
 import datetime
 import functools
+import json
 import os
 import random
 import time
@@ -33,12 +34,18 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
      I need a tequila.
      """
 
-    __slots__ = ('bot', 'omdb', 'osu', 'vcontrols')
+    __slots__ = ('bot', 'omdb', 'osu', 'vcontrols', 'scores', 'questions')
 
     def __init__(self, bot):
         self.bot = bot
         self.omdb = bot._config.get('OMDB', '_token')
         self.osu = OsuApi(bot._config.get('OSU', '_token'), connector=AHConnector())
+
+        with open('./resources/MBTIS.json') as f:
+            self.scores = json.load(f)
+
+        with open('./resources/MBTI.json') as f:
+            self.questions = json.load(f)
 
         bot.loop.create_task(self.temp_checker())
 
@@ -602,6 +609,124 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
 
         poll = await ctx.send(embed=embed)
         Vote(ctx, poll, resp, desc)
+
+    @commands.command(name='mbti', cls=utils.EvieeCommand)
+    async def mbti_test(self, ctx):
+        """Take the MBTI Personality Test"""
+        embeds = []
+
+        for q in self.questions.values():
+
+            try:
+                q['C']
+            except KeyError:
+                embed = discord.Embed(title=q['Q'], description=f'A - {q["A"]}\n\nB - {q["B"]}',
+                                      colour=0xA25576)
+            else:
+                embed = discord.Embed(title=q['Q'], description=f'A - {q["A"]}\n\nB - {q["B"]}\n\nC - {q["C"]}',
+                                      colour=0xA25576)
+
+            embed.set_thumbnail(url='https://i.imgur.com/1juScvA.png')
+            embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+            embed.set_footer(text='MBTI Personality Test')
+            embeds.append(embed)
+
+        MBTI(ctx, embeds, self.scores)
+
+
+class MBTI:
+
+    def __init__(self, ctx, pages, scores):
+        self.ctx = ctx
+        self.bot = ctx.bot
+        self.controls = {'🇦': 'A', '🇧': 'B', '🇨': 'C'}
+        self.pages = pages
+        self.scores = scores
+        self.base = None
+
+        self.results = {'E': 0, 'I': 0,
+                        'S': 0, 'N': 0,
+                        'T': 0, 'F': 0,
+                        'J': 0, 'P': 0}
+        self.result = []
+
+        self.bot.loop.create_task(self.reaction_loop())
+
+    async def reaction_loop(self):
+        self.base = await self.ctx.send(embed=self.pages[0])
+        count = 0
+
+        for reaction in self.controls:
+            try:
+                await self.base.add_reaction(str(reaction))
+            except discord.HTTPException:
+                return
+
+        def check(r, u):
+            if not self.base:
+                return False
+            elif str(r) not in self.controls.keys():
+                return False
+            elif u.id != self.ctx.author.id:
+                return False
+            return True
+
+        while not self.bot.is_closed():
+            count += 1
+            react, user = await self.bot.wait_for('reaction_add', check=check)
+
+            try:
+                await self.base.remove_reaction(react, user)
+            except discord.HTTPException:
+                pass
+
+            answer = self.controls.get(str(react))
+
+            if answer == 'C':
+                try:
+                    self.scores[str(count)][answer]
+                except KeyError:
+                    count -= 1
+                    continue
+
+            result = self.scores[str(count)][answer]
+
+            self.results[result[0]] += result[1]
+
+            try:
+                self.pages[count]
+            except IndexError:
+                break
+            else:
+                await self.base.edit(embed=self.pages[count])
+
+        if self.results['I'] >= self.results['E']:
+            self.result.append('I')
+        else:
+            self.result.append('E')
+
+        if self.results['N'] >= self.results['S']:
+            self.result.append('N')
+        else:
+            self.result.append('S')
+
+        if self.results['T'] >= self.results['F']:
+            self.result.append('T')
+        else:
+            self.result.append('F')
+
+        if self.results['P'] >= self.results['J']:
+            self.result.append('P')
+        else:
+            self.result.append('J')
+
+        result = ''.join(self.result)
+        embed = discord.Embed(title='MBTI Personality Test Results:', description=f'\n**{result}**')
+        embed.add_field(name='Read More:', value=f'[Click Me!](https://www.16personalities.com/{result}-personality)')
+        embed.set_author(name=self.ctx.author.display_name, icon_url=self.ctx.author.avatar_url)
+        embed.set_thumbnail(url=self.ctx.author.avatar_url)
+        await self.base.delete()
+        await self.ctx.send(embed=embed)
 
 
 class Vote:
