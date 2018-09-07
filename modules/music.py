@@ -540,7 +540,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             await to_do(ctx)
         else:
             await ctx.send(f'{ctx.author.mention}, has voted to {command} the song!'
-                           f' **{self.required(player) - len(attr)}** more votes needed!', delete_after=45)
+                           f' **{self.required(player, ctx.invoked_with) - len(attr)}** more votes needed!', delete_after=45)
 
     @commands.command(name='reactcontrol', hidden=True, cls=utils.EvieeCommand)
     async def react_control(self, ctx):
