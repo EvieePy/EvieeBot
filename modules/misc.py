@@ -675,7 +675,7 @@ class MBTI:
             count += 1
 
             try:
-                react, user = await self.bot.wait_for('reaction_add', check=check)
+                react, user = await self.bot.wait_for('reaction_add', check=check, timeout=180)
             except asyncio.TimeoutError:
                 await self.base.delete()
                 return
