@@ -341,6 +341,7 @@ class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.co
         await ctx.send('No.')
 
     @commands.command(name='markov', cls=utils.EvieeCommand)
+    @commands.cooldown(3, 60, commands.BucketType.user)
     async def do_markov(self, ctx, *, channel: discord.TextChannel=None):
         """Generate so babble using a markov chain.
 
