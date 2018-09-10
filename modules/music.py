@@ -623,6 +623,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             {ctx.prefix}play What is love?
             {ctx.prefix}play https://www.youtube.com/watch?v=XfR9iY5y94s
         """
+        await ctx.trigger_typing()
+        
         await ctx.invoke(self.connect_)
         query = query.strip('<>')
 
