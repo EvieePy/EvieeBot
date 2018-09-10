@@ -165,6 +165,7 @@ class MusicQueue(asyncio.Queue):
             player.paused = False
 
             self.current = track
+            player.current = track
             await player._lavalink.ws.send(op='play', guildId=str(self.guild_id), track=track.id)
             await player._lavalink.dispatch_event(lavalink.TrackStartEvent(self, track))
 
