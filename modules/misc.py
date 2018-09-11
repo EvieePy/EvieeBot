@@ -963,7 +963,7 @@ class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lv
         await ctx.send(embed=embed)
 
 
-class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-west-2.amazonaws.com/devcodepro/media/blog/la-fundacion-de-google.png')
+class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-west-2.amazonaws.com/devcodepro/media/blog/la-fundacion-de-google.png'):
     """Search the interwebs' Google engine for all your informative needs... Easy"""
 
     def __init__(self, bot):
