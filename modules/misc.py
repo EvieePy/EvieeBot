@@ -1017,7 +1017,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-
         headers = {'user-agent': self.user_agent}
 
         try:
-            async with self.bot.session(url, headers=headers) as resp:
+            async with self.bot.session.get(url, headers=headers) as resp:
                 page = await resp.text()
                 status = resp.status
         except Exception as e:
