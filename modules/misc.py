@@ -1034,7 +1034,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-
             if index == 30:
                 break
 
-            link, ext = json.loads(a.text)["ou"], json.loads(a.text)["ity"]
+            link, ext = json.loads(attr.text)["ou"], json.loads(attr.text)["ity"]
             if ext not in ('jpg', 'gif', 'png'):
                 continue
 
