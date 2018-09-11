@@ -997,7 +997,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-
         """
         pass
 
-    @google_.command(name='image', aliases=['img'])
+    @google_.command(name='image', aliases=['img', 'images', 'imgs'])
     async def google_image(self, ctx, *, query: str):
         """Search for images on Google Image Search.
 
