@@ -245,7 +245,7 @@ class Admin(metaclass=utils.MetaCog, private=True):
 
     @commands.command(name='timeit', cls=utils.EvieeCommand)
     @commands.is_owner()
-    async def timeit_(self, ctx, statement, number: int=100000, setup=''):
+    async def timeit_(self, ctx, setup='', number: int=100000, *, statement):
         env = {
             'bot': ctx.bot,
             'ctx': ctx,

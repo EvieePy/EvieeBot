@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 
 import asyncio
+import bs4
 import datetime
 import functools
 import json
@@ -960,4 +961,95 @@ class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lv
         embed.set_footer(text='Generated on ')
 
         await ctx.send(embed=embed)
+
+
+class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-west-2.amazonaws.com/devcodepro/media/blog/la-fundacion-de-google.png')
+    """Search the interwebs' Google engine for all your informative needs... Easy"""
+
+    def __init__(self, bot):
+        self.bot = bot
+
+    @property
+    def user_agent(self):
+        return 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
+
+    @commands.command(name='google', cls=utils.EvieeCommandGroup, aliases=['g'])
+    async def google_(self, ctx):
+        """Search various parts of Google.
+
+        Sub-Commands
+        --------------
+            image
+
+        Aliases
+        ---------
+            g
+
+        Examples
+        ----------
+        <prefix>google <subcommand><query>
+
+            {ctx.prefix}google image flowers
+            {ctx.prefix}google search Discord
+        """
+        pass
+
+    @google_.command(name='image', cls=utils.EvieeCommand, aliases=['img'])
+    async def google_image(self, ctx, *, query: str):
+        """Search for images on Google Image Search.
+
+        Aliases
+        ---------
+            img
+
+        Parameters
+        ------------
+            query: Required
+                The search query you want to use.
+
+        Examples
+        ----------
+        <prefix>google image <query>
+
+            {ctx.prefix}google image flowers
+        """
+        url = f'https://www.google.com/search?tbm=isch&q={query}&safe=on'
+        headers = {'user-agent': self.user_agent}
+
+        try:
+            async with self.bot.session(url, headers=headers) as resp:
+                page = await resp.text()
+                status = resp.status
+        except Exception as e:
+            return await ctx.send('Image search was not possible... Try again later')
+
+        if status != 200:
+            return await ctx.send('Image search was not possible... Try again later')
+
+        strainer = bs4.SoupStrainer('div', {'class': 'rg_meta notranslate'})
+        soup = bs4.BeautifulSoup(page, 'lxml', parse_only=strainer)
+
+        images = []
+        for index, attr in enumerate(soup.find_all("div", {"class": "rg_meta"})):
+            if index == 30:
+                break
+
+            link, ext = json.loads(a.text)["ou"], json.loads(a.text)["ity"]
+            if ext not in ('jpg', 'gif', 'png'):
+                continue
+
+            images.append(link)
+
+        extras = []
+        for index, link in enumerate(images):
+            embed = discord.Embed(title=f'Image results for {query}... | Page {index + 1}/{len(images)}')
+            embed.set_image(url=link)
+
+            extras.append(embed)
+
+        await ctx.paginate(extras=extras, timeout=180)
+
+
+
+
 
