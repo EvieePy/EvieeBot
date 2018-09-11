@@ -700,7 +700,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             await queue.invoke_controller()
 
     @commands.command(name='now_playing', aliases=['np', 'current', 'currentsong'], cls=utils.EvieeCommand)
-    @commands.cooldown(1, 15, commands.BucketType.user)
+    @commands.cooldown(2, 15, commands.BucketType.user)
     async def now_playing(self, ctx):
         """Invoke the player controller.
 
@@ -817,7 +817,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await player.stop()
 
     @commands.command(name='stop', cls=utils.EvieeCommand)
-    @commands.cooldown(2, 30, commands.BucketType.guild)
+    @commands.cooldown(3, 30, commands.BucketType.guild)
     async def stop_(self, ctx):
         """Stop the player, disconnect and clear the queue.
 
