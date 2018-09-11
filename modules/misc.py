@@ -1027,7 +1027,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-
             return await ctx.send('Image search was not possible... Try again later')
 
         strainer = bs4.SoupStrainer('div', {'class': 'rg_meta notranslate'})
-        soup = bs4.BeautifulSoup(page, 'lxml', parse_only=strainer)
+        soup = bs4.BeautifulSoup(page, 'html.parser', parse_only=strainer)
 
         images = []
         for index, attr in enumerate(soup.find_all("div", {"class": "rg_meta"})):
