@@ -10,6 +10,7 @@ import os
 import random
 import time
 import youtube_dl
+from collections import namedtuple
 from osuapi import OsuApi, AHConnector
 
 import utils
@@ -980,6 +981,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-
         Sub-Commands
         --------------
             image
+            news
 
         Aliases
         ---------
@@ -991,6 +993,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-
 
             {ctx.prefix}google image flowers
             {ctx.prefix}google search Discord
+            {ctx.prefix}google news Trump
         """
         pass
 
@@ -1048,6 +1051,67 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-
             extras.append(embed)
 
         await ctx.paginate(extras=extras, timeout=180)
+
+    @google_.command(name='news', aliases=['nws'])
+    async def google_news(self, ctx, *, query: str):
+        """Search for News on Google Search.
+
+        Aliases
+        ---------
+            nws
+
+        Parameters
+        ------------
+            query: Required
+                The search query you want to use.
+
+        Examples
+        ----------
+        <prefix>google news <query>
+
+            {ctx.prefix}google news Trump
+        """
+        url = f'https://www.google.com/search?q={query}&tbm=nws'
+        headers = {'user-agent': self.user_agent}
+
+        NewsCard = namedtuple('card', ['img', 'head', 'link', 'brief', 'source'])
+
+        try:
+            async with self.bot.session.get(url, headers=headers) as resp:
+                page = await resp.text()
+                status = resp.status
+        except Exception as e:
+            return await ctx.send('Image search was not possible... Try again later')
+
+        if status != 200:
+            return await ctx.send('Image search was not possible... Try again later')
+
+        soup = bs4.BeautifulSoup(page, 'html.parser')
+
+        cards = []
+        for i, a in enumerate(soup.find_all("div", {"class": "g"}), 0):
+            if i == 3:
+                break
+
+            img = a.find('img', {'class': 'th BbeB2d'})['src']
+            header = a.find('a', {'class': 'l lLrAF'})
+            head = header.text
+            link = header['href']
+            brief = a.find('div', {'class', 'st'}).text
+            source = a.find('div', {'class', 'slp'}).text
+
+            card = NewsCard(img=img, head=head, link=link, brief=brief, source=source)
+            cards.append(card)
+
+        extras = []
+        for card in cards:
+            embed = discord.Embed(title=card.head, url=card.link, description=card.brief, colour=0xaec6cf)
+            embed.set_thumbnail(url=card.img)
+            embed.set_footer(text=card.source)
+
+            extras.append(embed)
+
+        await ctx.paginate(extras=extras)
 
 
 
