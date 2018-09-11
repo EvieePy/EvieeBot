@@ -1071,7 +1071,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-
 
             {ctx.prefix}google news Trump
         """
-        url = f'https://www.google.com/search?q={query}&tbm=nws'
+        url = f'https://www.google.com/search?q={query}&tbm=nws&hl=en'
         headers = {'user-agent': self.user_agent}
 
         NewsCard = namedtuple('card', ['img', 'head', 'link', 'brief', 'source'])
