@@ -15,6 +15,9 @@ import utils
 
 
 class DPYSource:
+
+    __slots__ = ('file', 'obj', 'parent', 'index', 'path', 'match')
+
     def __init__(self, **attrs):
         self.file = attrs.get('file')
         self.obj = attrs.get('obj')
@@ -28,8 +31,6 @@ class Colour(metaclass=utils.MetaCog, category='API', colour=random.randint(0, 1
              thumbnail='https://i.imgur.com/g2LpJZb.png'):
     """Somewhere over the rainbow... An Eviee awaits!
     These commands should help you feel all nice inside."""
-
-    __slots__ = ('bot', 'BASE', 'BASE_S', '_invalid', '_pattern')
 
     def __init__(self, bot):
         self.bot = bot
@@ -136,8 +137,6 @@ class Colour(metaclass=utils.MetaCog, category='API', colour=random.randint(0, 1
 
 class Source(metaclass=utils.MetaCog, category='API', thumbnail='https://i.imgur.com/DF5ZfSh.png'):
     """Commands which allow you to Get that Juicy Sauce Code from various locations."""
-
-    __slots__ = ('bot', 'rtfs_anchors', 'rtfs_revision')
 
     def __init__(self, bot):
         self.bot = bot

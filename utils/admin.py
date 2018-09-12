@@ -22,8 +22,6 @@ import utils
 class Admin(metaclass=utils.MetaCog, private=True):
     """Admin commands for Eviee."""
 
-    __slots__ = ('bot', )
-
     def __init__(self, bot):
         self.bot = bot
 

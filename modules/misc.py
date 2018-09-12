@@ -36,8 +36,6 @@ class Misc(metaclass=utils.MetaCog, category='Misc', colour=0xa5d8d8, thumbnail=
      I need a tequila.
      """
 
-    __slots__ = ('bot', 'omdb', 'osu', 'vcontrols', 'scores', 'questions')
-
     def __init__(self, bot):
         self.bot = bot
         self.omdb = bot._config.get('OMDB', '_token')
@@ -828,8 +826,6 @@ class Vote:
 class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lvQq.png'):
     """Commands which help you understand this cruel world and its surrounds better.
     Maybe..."""
-
-    __slots__ = ('bot', )
 
     def __init__(self, bot):
         self.bot = bot

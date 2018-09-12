@@ -14,8 +14,6 @@ import utils
 class Fun(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.com/w8OIp4P.png'):
     """Commands which make life just that little bit more worth living."""
 
-    __slots__ = ('bot',)
-
     def __init__(self, bot):
         self.bot = bot
 
@@ -416,7 +414,6 @@ class Games(metaclass=utils.MetaCog, category='Fun', thumbnail='https://i.imgur.
     """Who said games!? These commands should keep you entertained...
     If only for a little bit.
     """
-    __slots__ = ('bot', 'c4')
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot

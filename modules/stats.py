@@ -46,8 +46,6 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
     """Want to know some boring stuff about the bot, yourself and others?
     These are your commands... In depth information is only an Eviee away!"""
 
-    __slots__ = ('bot', 'statuses', 'dbl')
-
     def __init__(self, bot):
         self.bot = bot
         self.statuses = {'online': '<:dot_online:420205881200738314>', 'offline': '<:dot_invis:420205881272172544>',
