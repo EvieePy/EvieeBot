@@ -1114,7 +1114,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728,
 
         await ctx.paginate(extras=extras)
 
-    @google_.command(name='search', aliases='s')
+    @google_.command(name='search', aliases=['s'])
     async def google_search(self, ctx, *, query: str):
         """Search for Google for a given query.
 

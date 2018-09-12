@@ -24,6 +24,7 @@ import discord
 
 import asyncio
 import inspect
+from typing import Union
 
 import utils
 
@@ -31,6 +32,89 @@ import utils
 async def pager(entries, chunk: int):
     for x in range(0, len(entries), chunk):
         yield entries[x:x + chunk]
+
+
+class Paginator:
+
+
+    __slots__ = ()
+
+    def __init__(self, **kwargs):
+        self.entries = kwargs.get('entries', None)
+        self.prepend_extras = kwargs.get('prepend_extras', None)
+        self.append_extras = kwargs.get('append_extras', None)
+
+        self.title =  kwargs.get('title', None)
+        self.colour = kwargs.get('colour', None)
+        self.footer = kwargs.get('footer', None)
+
+        self.length = kwargs.get('length', 10)
+        self.prepend = kwargs.get('prepend', '')
+        self.append = kwargs.get('append', '')
+        self.format = kwargs.get('fmt', '')
+        self.timeout = kwargs.get('timeout', 90)
+
+        self.controller = None
+        self.pages = []
+        self.names = []
+        self.base = None
+
+        self.current = 0
+        self.previous = 0
+        self.eof = 0
+
+        self.controls = {'⏮': 'start', '◀': -1, '⏹': 'stop',
+                         '▶': +1, '⏭': 'end'}
+
+    def chunker(self, entries: Union[list, tuple], chunk: int):
+        """Create chunks of our entries for pagination."""
+        for x in range(0, len(entries), chunk):
+            yield entries[x:x + chunk]
+
+    def indexer(self, ctx, ctrl):
+        pass
+
+    async def reaction_controller(self, ctx):
+        pass
+
+    async def stop_controller(self, message):
+        try:
+            await message.delete()
+        except discord.HTTPException:
+            pass
+
+        try:
+            self.controller.cancel()
+        except Exception:
+            pass
+
+    def formmater(self, chunk):
+        return '\n'.join(f'{self.prepend}{self.fmt}{value}{self.fmt[::-1]}{self.append}' for value in chunk)
+
+    async def paginate(self, ctx):
+        if self.extras:
+            self.pages = [p for p in self.extras if isinstance(p, discord.Embed)]
+
+        if self.entries:
+            chunks = [c async for c in pager(self.entries, self.length)]
+
+            for index, chunk in enumerate(chunks):
+                page = discord.Embed(title=f'{self.title} - {index + 1}/{len(chunks)}', color=self.colour)
+                page.description = self.formmater(chunk)
+
+                if self.footer:
+                    page.set_footer(text=self.footer)
+                self.pages.append(page)
+
+        if not self.pages:
+            raise utils.EvieeBaseException('There must be enough data to create at least 1 page for pagination.')
+
+        self.eof = float(len(self.pages) - 1)
+        self.controls['⏭'] = self.eof
+        self.controller = ctx.bot.loop.create_task(self.reaction_controller(ctx))
+
+
+
 
 
 class SimplePaginator:
