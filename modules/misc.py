@@ -976,7 +976,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728,
         return 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
 
     @commands.command(name='google', cls=utils.EvieeCommandGroup, aliases=['g'])
-    async def google_(self, ctx):
+    async def google_(self, ctx, *, query: str):
         """Search various parts of Google.
 
         Sub-Commands
@@ -996,7 +996,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728,
             {ctx.prefix}google search Discord
             {ctx.prefix}google news Trump
         """
-        pass
+        await ctx.invoke(self.google_search, query)
 
     @google_.command(name='image', aliases=['img', 'images', 'imgs'])
     async def google_image(self, ctx, *, query: str):
