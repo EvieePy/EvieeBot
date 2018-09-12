@@ -999,6 +999,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728,
         await ctx.invoke(self.google_search, query=query)
 
     @google_.command(name='image', aliases=['img', 'images', 'imgs'])
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def google_image(self, ctx, *, query: str):
         """Search for images on Google Image Search.
 
@@ -1054,6 +1055,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728,
         await ctx.paginate(extras=extras, timeout=180)
 
     @google_.command(name='news', aliases=['nws'])
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def google_news(self, ctx, *, query: str):
         """Search for News on Google Search.
 
@@ -1115,6 +1117,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728,
         await ctx.paginate(extras=extras)
 
     @google_.command(name='search', aliases=['s'])
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def google_search(self, ctx, *, query: str):
         """Search for Google for a given query.
 
