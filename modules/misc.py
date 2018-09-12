@@ -976,6 +976,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728,
         return 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
 
     @commands.command(name='google', cls=utils.EvieeCommandGroup, aliases=['g'])
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def google_(self, ctx, *, query: str):
         """Search various parts of Google.
 
