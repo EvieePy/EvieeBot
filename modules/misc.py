@@ -1019,7 +1019,11 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728,
 
             {ctx.prefix}google image flowers
         """
-        url = f'https://www.google.com/search?tbm=isch&q={query}&safe=on'
+        if ctx.channel.is_nsfw():
+            url = f'https://www.google.com/search?tbm=isch&q={query}&safe=off'
+        else:
+            url = f'https://www.google.com/search?tbm=isch&q={query}&safe=on'
+        
         headers = {'user-agent': self.user_agent}
 
         try:
