@@ -28,6 +28,9 @@ surl = re.compile('https:\/\/open.spotify.com?.+playlist\/([a-zA-Z0-9]+)')
 
 class Track:
 
+    __slots__ = ('ctx', 'id', 'requester', 'channel', 'message', 'query', 'title',
+                 'ytid', 'length', 'thumb', 'uri', 'is_stream', 'dead')
+
     def __init__(self, id_, info, ctx, query=None):
         self.ctx = ctx
         self.id = id_
@@ -809,6 +812,11 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             return await self.do_skip(ctx)
 
         queue = self.get_queue(ctx)
+
+        if queue.current.requester.id == ctx.author.id:
+            await ctx.send(f'The requester {ctx.author.mention} has skipped the song.')
+            return await self.do_skip(ctx)
+        
         await self.do_vote(ctx, queue, 'skip')
 
     async def do_skip(self, ctx):
