@@ -996,7 +996,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728,
             {ctx.prefix}google search Discord
             {ctx.prefix}google news Trump
         """
-        await ctx.invoke(self.google_search, query)
+        await ctx.invoke(self.google_search, query=query)
 
     @google_.command(name='image', aliases=['img', 'images', 'imgs'])
     async def google_image(self, ctx, *, query: str):
