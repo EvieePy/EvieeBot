@@ -964,7 +964,8 @@ class Observations(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/oA6lv
         await ctx.send(embed=embed)
 
 
-class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-west-2.amazonaws.com/devcodepro/media/blog/la-fundacion-de-google.png'):
+class Google(metaclass=utils.MetaCog, colour=0xff3728,
+             thumbnail='https://s3-us-west-2.amazonaws.com/devcodepro/media/blog/la-fundacion-de-google.png'):
     """Search the interwebs' Google engine for all your informative needs... Easy"""
 
     def __init__(self, bot):
@@ -1081,10 +1082,10 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-
                 page = await resp.text()
                 status = resp.status
         except Exception as e:
-            return await ctx.send('Image search was not possible... Try again later')
+            return await ctx.send('News search was not possible... Try again later')
 
         if status != 200:
-            return await ctx.send('Image search was not possible... Try again later')
+            return await ctx.send('News search was not possible... Try again later')
 
         soup = bs4.BeautifulSoup(page, 'html.parser')
 
@@ -1112,6 +1113,58 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728, thumbnail='https://s3-us-
             extras.append(embed)
 
         await ctx.paginate(extras=extras)
+
+    @google_.command(name='search', aliases='s')
+    async def google_search(self, ctx, *, query: str):
+        """Search for Google for a given query.
+
+        Aliases
+        ---------
+            s
+
+        Parameters
+        ------------
+            query: Required
+                The search query you want to use.
+
+        Examples
+        ----------
+        <prefix>google search <query>
+
+            {ctx.prefix}google search Speedtest
+        """
+        url = f'https://www.google.com/search?q={query}&hl=en'
+        headers = {'user-agent': self.user_agent}
+
+        try:
+            async with self.bot.session.get(url, headers=headers) as resp:
+                page = await resp.text()
+                status = resp.status
+        except Exception as e:
+            return await ctx.send('Google search was not possible... Try again later')
+
+        if status != 200:
+            return await ctx.send('Google search was not possible... Try again later')
+
+        soup = bs4.BeautifulSoup(page, 'html.parser')
+
+        links = []
+        for i, a in enumerate(soup.find_all("div", {"class": "rc"}), 0):
+            if i == 3:
+                break
+
+            link = a.find('h3', {'class': 'r'}).find('a')['href']
+
+            if i != 0:
+                # Don't allow discord to send a preview
+                link = f'<{link}>'
+
+            links.append(link)
+
+        if not links:
+            return await ctx.send(f'No search results matching... {query}')
+
+        await ctx.send(f'{links[0]}\n\n**See Also:**\n{links[1]}\n{links[2]}')
 
 
 
