@@ -1023,7 +1023,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728,
             url = f'https://www.google.com/search?tbm=isch&q={query}&safe=off'
         else:
             url = f'https://www.google.com/search?tbm=isch&q={query}&safe=on'
-        
+
         headers = {'user-agent': self.user_agent}
 
         try:

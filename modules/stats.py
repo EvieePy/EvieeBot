@@ -19,6 +19,7 @@ from io import BytesIO
 from matplotlib.ticker import MultipleLocator
 from more_itertools import ilen, with_iter
 from PIL import Image, ImageSequence, ImageFont, ImageDraw, ImageColor
+from typing import Union
 
 import utils
 
@@ -57,7 +58,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         self.bot.loop.create_task(self.update_dbl())
         self.bot.loop.create_task(self.expiry_check())
 
-    async def get_perms(self, ctx, target: utils.Union(discord.Member, discord.Role), *, previous=None):
+    async def get_perms(self, ctx, target: Union[discord.Member, discord.Role], *, previous=None):
 
         cembed = discord.Embed(title=f'Channel Permissions for {target.name}',
                                description=f'Channel: **`{ctx.channel.name}`**\n',
@@ -319,7 +320,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         return await ctx.send(member.avatar_url)
 
     @commands.command(name='perms', aliases=['permissions'], cls=utils.EvieeCommand)
-    async def show_perms(self, ctx, *, target: utils.Union(discord.Member, discord.Role)=None):
+    async def show_perms(self, ctx, *, target: Union[discord.Member, discord.Role]=None):
         """Display permissions for a user or role."""
         if not target:
             target = ctx.author
