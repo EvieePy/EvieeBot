@@ -1171,6 +1171,55 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728,
         await ctx.send(f'{links[0]}\n\n**See Also:**\n{links[1]}\n{links[2]}')
 
 
+class NSFW(metaclass=utils.MetaCog, colour=0xbf3463, thumbnail='https://i.imgur.com/2VODaDr.png'):
+    """Naughty commands for naughty eyes. These commands only work in NSFW channels."""
 
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(name='r34', aliases=['rule34'], cls=utils.EvieeCommand)
+    async def rule_34(self, ctx, *, query: str):
+        """Search naughty pictures from Rule 34.
+
+        Aliases
+        ---------
+            rule34
+
+        Parameters
+        ------------
+            query: Required
+                The search query to use.
+
+        Examples
+        ----------
+        <prefix>r34 <query>
+
+            {ctx.clean_prefix}r34 Female
+        """
+        await ctx.trigger_typing()
+
+        if not ctx.channel.is_nsfw():
+            return await ctx.send('This command can only be used in NSFW channels.')
+
+        url = f'https://r34-json-api.herokuapp.com/posts?tags={query.replace(" ", "+")}'
+
+        try:
+            async with self.bot.session.get(url) as resp:
+                data = await resp.json()
+                status = resp.status
+        except Exception as e:
+            return await ctx.send('There was an error processing your request... Please try again!')
+
+        if status != 200:
+            return await ctx.send('There was an error processing your request... Please try again!')
+
+        embeds = []
+        for index, image in enumerate(data, 1):
+            embed = discord.Embed(title=f'RULE-34 results for {query}... | Page {index}/{len(data)}', colour=0xbf3463)
+            embed.set_image(url=image['file_url'])
+
+            embeds.append(embed)
+
+        await ctx.paginate(extras=embeds, timeout=300)
 
 
