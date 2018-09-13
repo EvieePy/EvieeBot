@@ -126,6 +126,11 @@ class EvieeContext(commands.Context):
         self.colours = {'warn': 0xFFCC00, 'alert': 0xF31431}
         super().__init__(**attrs)
 
+    @property
+    def clean_prefix(self):
+        user = self.guild.me if self.guild else self.bot.user
+        return self.prefix.replace(user.mention, '@' + user.display_name)
+
     async def paginate(self, **kwargs):
         cls = utils.SimplePaginator(**kwargs)
         self.bot.loop.create_task(cls.paginate(self))

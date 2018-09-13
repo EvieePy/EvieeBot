@@ -114,9 +114,6 @@ class Paginator:
         self.controller = ctx.bot.loop.create_task(self.reaction_controller(ctx))
 
 
-
-
-
 class SimplePaginator:
 
     __slots__ = ('entries', 'extras', 'title', 'description', 'colour', 'footer', 'length', 'prepend', 'append',
@@ -396,8 +393,8 @@ class HelpPaginator(SimplePaginator):
                                             '`prefix - [Group]<add, remove, reset>`\n\n'
                                             'This for example allows prefix add to be used in the'
                                             ' following ways:\n\n'
-                                            f'`{ctx.prefix}prefix add ...` **or**\n'
-                                            f'`{ctx.prefix}add prefix ...`',
+                                            f'`{ctx.clean_prefix}prefix add ...` **or**\n'
+                                            f'`{ctx.clean_prefix}add prefix ...`',
                                 colour=0xffb2b2)
 
         first.set_thumbnail(url=ctx.bot.user.avatar_url)

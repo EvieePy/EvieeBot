@@ -816,7 +816,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         if queue.current.requester.id == ctx.author.id:
             await ctx.send(f'The requester {ctx.author.mention} has skipped the song.')
             return await self.do_skip(ctx)
-        
+
         await self.do_vote(ctx, queue, 'skip')
 
     async def do_skip(self, ctx):
