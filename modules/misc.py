@@ -1179,7 +1179,7 @@ class NSFW(metaclass=utils.MetaCog, colour=0xbf3463, thumbnail='https://i.imgur.
 
     @commands.command(name='r34', aliases=['rule34'], cls=utils.EvieeCommand)
     async def rule_34(self, ctx, *, query: str):
-        """Search naughty pictures from Rule 34.
+        """Search pictures from Rule 34.
 
         Aliases
         ---------
@@ -1212,6 +1212,9 @@ class NSFW(metaclass=utils.MetaCog, colour=0xbf3463, thumbnail='https://i.imgur.
 
         if status != 200:
             return await ctx.send('There was an error processing your request... Please try again!')
+
+        if not data:
+            return await ctx.send(f'No results found for {query}...')
 
         embeds = []
         for index, image in enumerate(data, 1):
