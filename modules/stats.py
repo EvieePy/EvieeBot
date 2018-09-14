@@ -760,6 +760,6 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
     async def on_command(self, ctx):
         async with self.bot.pool.acquire() as conn:
             query = """INSERT INTO commands(name, ts, gid, uid, cid) VALUES($1, $2, $3, $4, $5)"""
-            await conn.execute(query, ctx.commands.qualified_name, datetime.datetime.utcnow(),
+            await conn.execute(query, ctx.command.qualified_name, datetime.datetime.utcnow(),
                                ctx.guild.id, ctx.author.id, ctx.channel.id)
 
