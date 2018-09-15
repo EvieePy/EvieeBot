@@ -648,7 +648,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
 
     @commands.command(name='linecount', cls=utils.EvieeCommand)
     async def lc(self, ctx, target=None):
-        cmd = self.bot.get_command(target)
+        cmd = self.bot.get_command(target) if target else None
         cog = self.bot.get_cog(target)
         ext = self.bot.get_ext(target)
 
@@ -670,6 +670,22 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         async with self.bot.pool.acquire() as conn:
             coms = await conn.fetchval("""SELECT value FROM stats WHERE item IN('commands')""")
             messages = await conn.fetchval("""SELECT value FROM stats WHERE item IN('messages')""")
+
+            command_count = await conn.fetch("""SELECT name, count(*) AS count FROM commands
+                                                GROUP BY 1 ORDER BY count DESC""")
+
+            ucount = await conn.fetch("""SELECT uid, count(*) AS count FROM commands GROUP BY uid
+                                          ORDER BY count DESC""")
+            gcount = await conn.fetch("""SELECT gid,count(*) AS count FROM commands GROUP BY gid
+                                          ORDER BY count DESC""")
+
+        uc1 = self.bot.get_user(ucount[0]['uid'])
+        uc2 = self.bot.get_user(ucount[1]['uid'])
+        uc3 = self.bot.get_user(ucount[2]['uid'])
+
+        gc1 = self.bot.get_guild(gcount[0]['gid'])
+        gc2 = self.bot.get_guild(gcount[1]['gid'])
+        gc3 = self.bot.get_guild(gcount[2]['gid'])
 
         uptime = format_delta(delta=datetime.datetime.utcnow() - self.bot.starttime, brief=False)
         memory = self.bot.proc.memory_full_info().uss / 1024 ** 2
@@ -705,7 +721,21 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
             revision = 'Could not fetch due to memory error. Sorry.'
 
         gembed = discord.Embed(title='Latest Revisions:', description=revision)
-        await ctx.paginate(extras=[embed, gembed])
+
+        cembed = discord.Embed(title='Command Stats')
+        cembed.add_field(name='Top commands', value=f'🥇 {command_count[0]["name"]} ({command_count[1]["count"]})\n'
+                                                    f'🥈 {command_count[1]["name"]} ({command_count[1]["count"]})\n'
+                                                    f'🥉 {command_count[2]["name"]} ({command_count[2]["count"]})\n')
+        cembed.add_field(name='Top command users (Users)',
+                         value=f'🥇 {uc1.mention}[{str(uc1)}] ({ucount[0]["count"]})\n'
+                               f'🥈 {uc2.mention}[{str(uc2)}] ({ucount[1]["count"]})\n'
+                               f'🥉 {uc3.mention}[{str(uc3)}] ({ucount[2]["count"]})\n', inline=False)
+        cembed.add_field(name='Top command users (Guilds)',
+                         value=f'🥇 {gc1.name} ({gcount[0]["count"]})\n'
+                               f'🥈 {gc2.name} ({gcount[1]["count"]})\n'
+                               f'🥉 {gc3.name} ({gcount[2]["count"]})\n')
+
+        await ctx.paginate(extras=[embed, gembed, cembed])
 
     def make_pie(self):
 
