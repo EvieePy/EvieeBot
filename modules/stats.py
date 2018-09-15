@@ -720,9 +720,9 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         except OSError:
             revision = 'Could not fetch due to memory error. Sorry.'
 
-        gembed = discord.Embed(title='Latest Revisions:', description=revision)
+        gembed = discord.Embed(title='Latest Revisions:', description=revision, colour=0xff6961)
 
-        cembed = discord.Embed(title='Command Stats')
+        cembed = discord.Embed(title='Command Stats', colour=0xff6961)
         cembed.add_field(name='Top commands', value=f'🥇 {command_count[0]["name"]} ({command_count[1]["count"]})\n'
                                                     f'🥈 {command_count[1]["name"]} ({command_count[1]["count"]})\n'
                                                     f'🥉 {command_count[2]["name"]} ({command_count[2]["count"]})\n')
