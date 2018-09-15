@@ -679,13 +679,13 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
             gcount = await conn.fetch("""SELECT gid,count(*) AS count FROM commands GROUP BY gid
                                           ORDER BY count DESC""")
 
-        uc1 = self.bot.get_user(ucount[0]['uid'])
-        uc2 = self.bot.get_user(ucount[1]['uid'])
-        uc3 = self.bot.get_user(ucount[2]['uid'])
+        uc1 = self.bot.get_user(ucount[0]['uid']) if self.bot.get_user(ucount[0]['uid']) else "N/A"
+        uc2 = self.bot.get_user(ucount[1]['uid']) if self.bot.get_user(ucount[1]['uid']) else "N/A"
+        uc3 = self.bot.get_user(ucount[2]['uid']) if self.bot.get_user(ucount[2]['uid']) else "N/A"
 
-        gc1 = self.bot.get_guild(gcount[0]['gid'])
-        gc2 = self.bot.get_guild(gcount[1]['gid'])
-        gc3 = self.bot.get_guild(gcount[2]['gid'])
+        gc1 = self.bot.get_guild(gcount[0]['gid']).name if self.bot.get_guild(gcount[0]['gid']) else "N/A"
+        gc2 = self.bot.get_guild(gcount[1]['gid']).name if self.bot.get_guild(gcount[1]['gid']) else "N/A"
+        gc3 = self.bot.get_guild(gcount[2]['gid']).name if self.bot.get_guild(gcount[2]['gid']) else "N/A"
 
         uptime = format_delta(delta=datetime.datetime.utcnow() - self.bot.starttime, brief=False)
         memory = self.bot.proc.memory_full_info().uss / 1024 ** 2
@@ -727,14 +727,14 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
                                                     f'🥈 {command_count[1]["name"]} ({command_count[1]["count"]})\n'
                                                     f'🥉 {command_count[2]["name"]} ({command_count[2]["count"]})\n')
         cembed.add_field(name='Top command users (Users)',
-                         value=f'🥇 {uc1.mention or "N/A"}[{str(uc1) or "N/A"}] ({ucount[0]["count"]})\n'
-                               f'🥈 {uc2.mention or "N/A"}[{str(uc2) or "N/A"}] ({ucount[1]["count"]})\n'
-                               f'🥉 {uc3.mention or "N/A"}[{str(uc3) or "N/A"}] ({ucount[2]["count"]})\n',
+                         value=f'🥇 {str(uc1)} ({ucount[0]["count"]})\n'
+                               f'🥈 {str(uc2)} ({ucount[1]["count"]})\n'
+                               f'🥉 {str(uc3)} ({ucount[2]["count"]})\n',
                          inline=False)
         cembed.add_field(name='Top command users (Guilds)',
-                         value=f'🥇 {gc1.name or "N/A"} ({gcount[0]["count"]})\n'
-                               f'🥈 {gc2.name or "N/A"} ({gcount[1]["count"]})\n'
-                               f'🥉 {gc3.name or "N/A"} ({gcount[2]["count"]})\n')
+                         value=f'🥇 {gc1} ({gcount[0]["count"]})\n'
+                               f'🥈 {gc2} ({gcount[1]["count"]})\n'
+                               f'🥉 {gc3} ({gcount[2]["count"]})\n')
 
         await ctx.paginate(extras=[embed, gembed, cembed])
 
