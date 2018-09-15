@@ -40,7 +40,6 @@ import lavalink
 import logging
 import pathlib
 import psutil
-import pylava
 import os
 import sys
 import time
@@ -120,9 +119,10 @@ class Botto(commands.Bot):
         super().__init__(command_prefix=get_prefix)
         self.lavalink = lavalink.Client(bot=self,
                                         password=self._config.get("LL", "value"),
-                                        rest_port=2333, ws_port=8080,
+                                        rest_port=2333, ws_port=80,
                                         loop=self.loop,
-                                        log_level=logging.DEBUG)
+                                        log_level=logging.WARN,
+                                        host='51.158.68.132')
 
     def is_reconnecting(self):
         """Return the bots reconnection state."""
