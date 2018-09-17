@@ -116,7 +116,7 @@ class Botto(commands.Bot):
 
         self.fkey = Fernet(config.get('ENCRYPTION', '_token').encode())
 
-        super().__init__(command_prefix=get_prefix)
+        super().__init__(command_prefix='e..')
         self.lavalink = lavalink.Client(bot=self,
                                         password=self._config.get("LL", "value"),
                                         rest_port=2333, ws_port=80,
@@ -462,10 +462,9 @@ def start():
         return loop.run_until_complete(shutdown(reason=e))
 
     try:
-        loop.run_until_complete(bot.start(config.get('TOKEN', '_tokent')))
+        loop.run_until_complete(bot.start(config.get('TOKEN', '_tokenm')))
     except KeyboardInterrupt as e:
         return loop.run_until_complete(shutdown(reason=e))
 
 
 start()
-
