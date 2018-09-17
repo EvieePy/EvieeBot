@@ -462,7 +462,7 @@ def start():
         return loop.run_until_complete(shutdown(reason=e))
 
     try:
-        loop.run_until_complete(bot.start(config.get('TOKEN', '_tokenm')))
+        loop.run_until_complete(bot.start(config.get('TOKEN', '_tokent')))
     except KeyboardInterrupt as e:
         return loop.run_until_complete(shutdown(reason=e))
 
