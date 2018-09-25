@@ -499,7 +499,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
     def required(self, player, invoked_with):
         if invoked_with == 'stop':
-            if len(player.connected_channel.members) -1 == 2:
+            if len(player.connected_channel.members) - 1 == 2:
                 return 2
 
         return math.ceil((len(player.connected_channel.members) - 1) / 2.5)
@@ -542,7 +542,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         vcc = len(player.connected_channel.members) - 1
         votes = getattr(queue, command + 's', None)
 
-        if vcc < 3:
+        if vcc < 3 and not ctx.invoked_with == 'stop':
             votes.clear()
             return True
         else:
