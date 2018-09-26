@@ -455,7 +455,9 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             return True
         elif ctx.invoked_with == 'play' and not player.is_connected:
             return True
-        elif ctx.invoked_with == 'queue' and player.is_connected:
+        elif ctx.invoked_with == 'queue' or ctx.invoked_with == 'q' and player.is_connected:
+            return True
+        elif ctx.invoked_with == 'faves' or ctx.invoked_with == 'favourites':
             return True
 
         if ctx.author not in player.connected_channel.members:

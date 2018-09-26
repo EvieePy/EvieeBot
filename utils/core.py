@@ -57,7 +57,7 @@ class MetaCog(type):
     def __call__(cls, *args, **kwargs):
         self = super().__call__(*args, **kwargs)
 
-        if not isinstance(args[0], commands.Bot):
+        if not isinstance(args[0], (commands.Bot, commands.AutoShardedBot)):
             raise utils.MissingInstance('Bot is required as the first argument in MetaCogs.')
 
         bot = args[0]
@@ -484,9 +484,9 @@ def backoff_loop(until_ready=True):
     """Decorator which converts a task into a loop, and applies an Exponential Backoff on reconnecting state."""
     def decorator(func):
         async def wrapper(*args, **kwargs):
-            if isinstance(args[0], commands.Bot):
+            if isinstance(args[0], (commands.Bot, commands.AutoShardedBot)):
                 bot = args[0]
-            elif not isinstance(args[0].bot, commands.Bot):
+            elif not isinstance(args[0].bot, (commands.Bot, commands.AutoShardedBot)):
                 raise utils.MissingInstance(f'Missing an instance of Bot in task <{func.__name__}>.')
             else:
                 bot = args[0].bot
