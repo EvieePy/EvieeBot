@@ -47,7 +47,7 @@ class _Discord(metaclass=utils.MetaCog, private=True, hidden=True):
 
             ts = time.time()
             msg = await chan.send('Ping!')
-            rtt = (time.time() - ts) * 1000
+            rtt = (time.time() - ts)
 
             lg.rtt_pings.append(rtt)
             await msg.delete()
