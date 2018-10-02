@@ -19,7 +19,7 @@ class LiveGraphs(threading.Thread):
 
     def run(self):
         while True:
-            app.run_server()
+            app.run_server(host='10.1.73.87', port=6969)
 
 
 lg = LiveGraphs()

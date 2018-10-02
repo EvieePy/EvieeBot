@@ -29,7 +29,8 @@ class Tags(metaclass=utils.MetaCog):
                 print(string)
                 out = self.temp[string]
             except KeyError:
-                string = string.replace(a, '').lstrip()
+                print(a)
+                string = string.replace(a, '', 1).lstrip().rstrip()
                 args.append(a)
                 print(args)
                 continue
@@ -69,8 +70,6 @@ class Tags(metaclass=utils.MetaCog):
                         out = out.replace(m, args[int(m[1]) - 1])
                     except IndexError:
                         return await ctx.send('Error')
-                else:
-                    return await ctx.send("Error")
 
             elif attr[0] == 'ctx':
                 attr = getattr(ctx, attr[1])
