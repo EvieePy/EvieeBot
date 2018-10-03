@@ -37,22 +37,21 @@ class _Discord(metaclass=utils.MetaCog, private=True, hidden=True):
     async def update_wsping(self):
         while True:
             lg.wss_pings.append(self.bot.latency * 1000)
-            await asyncio.sleep(1)
+            await asyncio.sleep(5)
 
     async def update_rttping(self):
         await self.bot.wait_until_ready()
+        chan = self.bot.get_channel(434972274467274762)
 
         while True:
-            chan = self.bot.get_channel(434972274467274762)
-
             ts = time.time()
             msg = await chan.send('Ping!')
-            rtt = (time.time() - ts)
+            rtt = (time.time() - ts) * 1000
 
             lg.rtt_pings.append(rtt)
             await msg.delete()
 
-            await asyncio.sleep(1)
+            await asyncio.sleep(5)
 
 
 app = dash.Dash('Latency Over Time')
@@ -72,7 +71,7 @@ app.layout = html.Div([
     html.Div(children=html.Div(id='graphs'), className='row'),
     dcc.Interval(
         id='graph-update',
-        interval=1000),
+        interval=5000),
 ], className="container", style={'width': '98%', 'margin-left': 10, 'margin-right': 10, 'max-width': 50000})
 
 
