@@ -589,7 +589,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         pfile = await utils.evieecutor(to_do, loop=self.bot.loop)
 
         await ctx.send(content=f'```ini\nLatest WS Ping: [{self.bot._wspings[-1]}]\n```\n'
-                               f'Live Updates >> http://mystb.in:6969',
+                               f'Live Updates >> http://graphs.mysterial.me',
                        file=discord.File(pfile, 'wsping.png'))
 
     @commands.command(name='rttping', cls=utils.EvieeCommand)
@@ -605,8 +605,12 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         pfile = await utils.evieecutor(to_do, loop=self.bot.loop)
 
         await ctx.send(content=f'```ini\nLatest RTT: [{self.bot._rtts[-1]}]ms\n```\n'
-                               f'Live Updates >> http://mystb.in:6969',
+                               f'Live Updates >> http://graphs.mysterial.me',
                        file=discord.File(pfile, 'rttping.png'))
+
+    @commands.command(name='ping')
+    async def ping_(self, ctx):
+        await ctx.invoke(self.ws_ping)
 
     async def on_message(self, msg):
         async with self.bot.pool.acquire() as conn:
