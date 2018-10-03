@@ -55,7 +55,7 @@ class ErrorHandler(metaclass=utils.MetaCog, private=True):
         self.bot = bot
         self.debug = False
         self.lru_errors = utils.EvieeLRU(name='Errors', limit=10)
-        self.spam = commands.CooldownMapping(commands.Cooldown(3, 60, commands.BucketType.user))
+        self.spam = commands.CooldownMapping(commands.Cooldown(4, 60, commands.BucketType.user))
 
         self.counter_cmdf = 0
 
@@ -83,6 +83,30 @@ class ErrorHandler(metaclass=utils.MetaCog, private=True):
 
             if not retry_after:
                 return await ctx.send(f'The command {ctx.command} is an owner only command!', delete_after=20)
+
+            if ctx.author.id in self.bot.lru_blocks:
+                return
+
+            await ctx.error(level='alert', title='Blocked - Excessive Spam',
+                            info='You have been blocked for 5 minutes.', content=ctx.author.mention)
+
+            async with self.bot.pool.acquire() as conn:
+                async with conn.transaction():
+                    await conn.execute("""INSERT INTO blocks(id, reason, start, ends) VALUES ($1, 'Spam', now(), $2)
+                                          ON CONFLICT (id)
+                                          DO NOTHING """,
+                                       ctx.author.id, datetime.datetime.utcnow() + datetime.timedelta(minutes=5))
+                    self.bot.lru_blocks[ctx.author.id] = None
+
+        elif isinstance(error, commands.CommandOnCooldown):
+            bucket = self.spam.get_bucket(ctx.message)
+            retry_after = bucket.update_rate_limit()
+
+            if not retry_after:
+                return await ctx.send(f'You are on cooldown. Try again in {error.retry_after:.2f}s')
+
+            if ctx.author.id in self.bot.lru_blocks:
+                return
 
             await ctx.error(level='alert', title='Blocked - Excessive Spam',
                             info='You have been blocked for 5 minutes.', content=ctx.author.mention)
