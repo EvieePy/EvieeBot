@@ -65,7 +65,7 @@ app.layout = html.Div([
     dcc.Dropdown(id='latency-name',
                  options=[{'label': s, 'value': s}
                           for s in data_dict.keys()],
-                 value=['RTT'],
+                 value=['WS Latency'],
                  multi=True
                  ),
     html.Div(children=html.Div(id='graphs'), className='row'),

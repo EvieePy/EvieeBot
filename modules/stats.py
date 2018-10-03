@@ -588,7 +588,9 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         to_do = functools.partial(self.ping_plotter, name='Websocket')
         pfile = await utils.evieecutor(to_do, loop=self.bot.loop)
 
-        await ctx.send(file=discord.File(pfile, 'wsping.png'))
+        await ctx.send(content=f'```ini\nLatest WS Ping: [{self.bot._wspings[-1]}]\n```\n'
+                               f'Live Updates >> http://mystb.in:6969',
+                       file=discord.File(pfile, 'wsping.png'))
 
     @commands.command(name='rttping', cls=utils.EvieeCommand)
     @commands.cooldown(1, 45, commands.BucketType.user)
@@ -602,7 +604,8 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
         to_do = functools.partial(self.ping_plotter, data=self.bot._rtts, name='RTT')
         pfile = await utils.evieecutor(to_do, loop=self.bot.loop)
 
-        await ctx.send(content=f'```ini\nLatest RTT: [{self.bot._rtts[-1]}]ms\n```',
+        await ctx.send(content=f'```ini\nLatest RTT: [{self.bot._rtts[-1]}]ms\n```\n'
+                               f'Live Updates >> http://mystb.in:6969',
                        file=discord.File(pfile, 'rttping.png'))
 
     async def on_message(self, msg):
