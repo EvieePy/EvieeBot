@@ -4,7 +4,9 @@ from discord.ext import commands
 import utils
 
 
-class TwitchCog(metaclass=utils.MetaCog):
+class TwitchCog(metaclass=utils.MetaCog, colour=0x6441a5,
+                thumbnail='https://www.twitch.tv/p/assets/uploads/glitch_474x356.png'):
+    """Twitch related commands. This module is just a prototype for now!"""
 
     BASE = 'https://api.twitch.tv/helix/webhooks/hub?'
     HOST = '192.168.1.43'
@@ -28,6 +30,8 @@ class TwitchCog(metaclass=utils.MetaCog):
             return
 
         channel = self.bot.get_channel(data)
+        if not channel:
+            return
 
         embed = discord.Embed(title=f'{after.activity.name}', description=f'Watch live: {after.activity.url}')
         embed.add_field(name='Game', value=after.activity.details)
