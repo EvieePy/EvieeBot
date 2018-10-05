@@ -295,3 +295,8 @@ class Admin(metaclass=utils.MetaCog, private=True):
             return await ctx.send('Error while responding')
 
         await ctx.send('Response sent')
+
+    @commands.command(name='test lol')
+    async def test_(self, ctx):
+        thing = [m for m in ctx.guild.members if m.joined_at is None]
+        await ctx.send(f'{len(thing)}')
