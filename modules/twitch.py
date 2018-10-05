@@ -4,7 +4,7 @@ from discord.ext import commands
 import utils
 
 
-class TwitchCog:
+class TwitchCog(metaclass=utils.MetaCog):
 
     BASE = 'https://api.twitch.tv/helix/webhooks/hub?'
     HOST = '192.168.1.43'
@@ -78,7 +78,3 @@ class TwitchCog:
                                   ON CONFLICT(uid) DO UPDATE SET channel = $2""", ctx.author.id, channel)
 
         await ctx.send(f'Thanks. Your Twitch channel has been set to: `{channel}`')
-
-
-def setup(bot):
-    bot.add_cog(TwitchCog(bot))
