@@ -6,7 +6,7 @@ import twitchio.commands as tcommands
 import utils
 
 
-class TwitchCog(tcommands.TwitchBot):
+class TwitchCog():
 
     BASE = 'https://api.twitch.tv/helix/webhooks/hub?'
     HOST = '192.168.1.43'
@@ -14,7 +14,7 @@ class TwitchCog(tcommands.TwitchBot):
 
     def __init__(self, bot):
         self.bot = bot
-        super().__init__(irc_token='oauth:lisxp5mk5x701wx3myrloa15qrw9yl', client_id='d9ueaxgpwi5ktn3wheykya3tier0ms',
+        super().__init__(irc_token='...', client_id='...',
                          nick='mysterialbot', prefix='>>', initial_channels=['mysterialpy', 'ladymisai'])
 
     async def on_member_update(self, before: discord.Member, after: discord.Member):
