@@ -77,17 +77,22 @@ class TwitchCog(metaclass=utils.MetaCog, colour=0x6441a5,
                        f' `{ctx.prefix}twitch subscribe`')
 
     @twitch.command(name='subscribe', aliases=['sub'])
-    @commands.has_permissions(manage_roles=True)
+    @commands.bot_has_permissions(manage_roles=True)
     async def twitch_subscribe(self, ctx):
+        print(1)
         async with self.bot.pool.acquire() as conn:
             data = await conn.fetchval("""SELECT twitch FROM guilds WHERE id = $1""", ctx.guild.id)
+            print(2)
 
             if not data:
                 return await ctx.send('Your twitch announcement channel has not been setup yet.\n'
                                       'Please run: `twitch channel` in your desired announcement channel.')
+            print(3)
 
         role = discord.utils.get(ctx.guild.roles, name='Stream Announcements')
+        print(4)
         await ctx.author.add_roles(role, reason='Stream Announcements')
+        print(5)
 
         await ctx.send(f'Alright {ctx.author.mention}, I have given you the Stream Announcement role.')
 
