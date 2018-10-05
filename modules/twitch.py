@@ -1,7 +1,5 @@
 import discord
 from discord.ext import commands
-import twitchio
-from twitchio.ext import commands as tcommands
 
 import utils
 
