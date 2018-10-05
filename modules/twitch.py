@@ -15,6 +15,10 @@ class TwitchCog(metaclass=utils.MetaCog, colour=0x6441a5,
     def __init__(self, bot):
         self.bot = bot
 
+    async def __error(self, ctx, error):
+        if isinstance(error, commands.BotMissingPermissions):
+            return await ctx.send(f'I am missing permissions to run this command! I require `{error.missing_perms}`.')
+
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if not after.activity:
             return
@@ -39,13 +43,15 @@ class TwitchCog(metaclass=utils.MetaCog, colour=0x6441a5,
                          icon_url=after.avatar_url)
         embed.set_thumbnail(url=after.avatar_url)
 
-        await channel.send(embed=embed)
+        role = discord.utils.get(after.guild.roles, name='Stream Announcements')
+        await channel.send(content=f'{role.mention}', embed=embed)
 
     @commands.command(cls=utils.EvieeCommandGroup)
     async def twitch(self, ctx):
         pass
 
     @twitch.command(name='channel', aliases=['announcements', 'announce'])
+    @commands.bot_has_permissions(manage_roles=True)
     async def twitch_channel(self, ctx, *, channel: discord.TextChannel=None):
         """Set your Twitch announcements channel.
 
@@ -61,11 +67,29 @@ class TwitchCog(metaclass=utils.MetaCog, colour=0x6441a5,
         async with self.bot.pool.acquire() as conn:
             await conn.execute("""UPDATE guilds SET twitch = $1 WHERE guilds.id = $2""", channel.id, ctx.guild.id)
 
-        await ctx.send(f'Your Twitch announcement channel has been set to: {channel.mention}')
+        role = discord.utils.get(ctx.guild.roles, name='Stream Announcements')
+        if not role:
+            await ctx.guild.create_role(name='Stream Announcements', mentionable=True,
+                                        reason='Stream announcement channel setup')
 
-    @twitch.command(name='subscribe')
-    async def twitch_subscribe(self, ctx, *, user: discord.Member):
-        pass
+        await ctx.send(f'Your Twitch announcement channel has been set to: {channel.mention}.'
+                       f' Users may also subscribe to announcements to receive notifications with'
+                       f' `{ctx.prefix}twitch subscribe`')
+
+    @twitch.command(name='subscribe', aliases=['sub'])
+    @commands.has_permissions(manage_roles=True)
+    async def twitch_subscribe(self, ctx):
+        async with self.bot.pool.acquire() as conn:
+            data = await conn.fetchval("""SELECT twitch FROM guilds WHERE id = $1""", ctx.guild.id)
+
+            if not data:
+                return await ctx.send('Your twitch announcement channel has not been setup yet.\n'
+                                      'Please run: `twitch channel` in your desired announcement channel.')
+
+        role = discord.utils.get(ctx.guild.roles, name='Stream Announcements')
+        await ctx.author.add_roles(role, reason='Stream Announcements')
+
+        await ctx.send(f'Alright {ctx.author.mention}, I have given you the Stream Announcement role.')
 
     @twitch.command(name='setup')
     async def twitch_setup(self, ctx, *, channel: str):
