@@ -1157,7 +1157,7 @@ class Google(metaclass=utils.MetaCog, colour=0xff3728,
             if i == 3:
                 break
 
-            link = a.find('h3', {'class': 'r'}).find('a')['href']
+            link = a.find('div', {'class': 'r'}).find('a')['href']
 
             if i != 0:
                 # Don't allow discord to send a preview
