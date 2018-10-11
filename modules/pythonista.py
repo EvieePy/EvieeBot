@@ -25,3 +25,13 @@ class Pythonista(metaclass=utils.MetaCog):
         channel = self.bot.get_channel(491097233765433346)
         await channel.send(f'**-** | {str(member)}({"User" if not member.bot else "Bot"})')
 
+    @commands.command(hidden=True)
+    async def twitchio(self, ctx):
+        role = discord.utils.get(ctx.guild.roles, name='TwitchIO')
+
+        if role in ctx.author.roles:
+            await ctx.author.remove_roles(role, reason='Automatic role command.')
+            await ctx.message.add_reaction('\U0001F494')
+        else:
+            await ctx.author.add_roles(role, reason='Automatic role command.')
+            await ctx.message.add_reaction('❤')
