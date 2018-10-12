@@ -25,7 +25,7 @@ class StringParser:
                 break
 
             if loc.isspace() and not self.ignore:
-                self.words[self.index] = msg[self.start:self.count]
+                self.words[self.index] = msg[self.start:self.count].replace(' ', '', 1)
                 self.index += 1
                 self.start = self.count + 1
 
