@@ -202,7 +202,7 @@ class Source(metaclass=utils.MetaCog, category='API', thumbnail='https://i.imgur
         anchors = []
         parent = None
 
-        pf = r'def (.*?[a-zA-Z0-9])\(.*\)'
+        pf = r'def(.*?[a-zA-Z0-9])\(.*\)|async def(.*?[a-zA-Z0-9])\(.*\)'
         pc = r'class (.*[a-zA-Z0-9])[\:\(]'
 
         def pred(y):
@@ -247,7 +247,8 @@ class Source(metaclass=utils.MetaCog, category='API', thumbnail='https://i.imgur
                         parent = match.group(1)
 
                 try:
-                    obj = match.group(1)
+                    obj = match.group(1) or match.group(2)
+                    obj = obj.lstrip()
                 except AttributeError:
                     continue
 
