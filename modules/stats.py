@@ -609,6 +609,7 @@ class Stats(metaclass=utils.MetaCog, colour=0xffebba, thumbnail='https://i.imgur
                        file=discord.File(pfile, 'rttping.png'))
 
     @commands.command(name='ping')
+    @commands.cooldown(1, 45, commands.BucketType.user)
     async def ping_(self, ctx):
         await ctx.invoke(self.ws_ping)
 
