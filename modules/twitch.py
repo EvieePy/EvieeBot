@@ -1,19 +1,18 @@
 import discord
 from discord.ext import commands
+from twitchio.ext import commands as tcommands
 
 import utils
 
 
-class TwitchCog(metaclass=utils.MetaCog, colour=0x6441a5,
-                thumbnail='https://www.twitch.tv/p/assets/uploads/glitch_474x356.png'):
+class TwitchCog(tcommands.TwitchBot):
     """Twitch related commands. This module is just a prototype for now!"""
 
-    BASE = 'https://api.twitch.tv/helix/webhooks/hub?'
-    HOST = '192.168.1.43'
-    PORT = 6968
-
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__()
+        self.thumbanail = 'https://www.twitch.tv/p/assets/uploads/glitch_474x356.png'
+        self.colour = 0x6441a5
+        self.dbot = bot
 
     async def __error(self, ctx, error):
         if isinstance(error, commands.BotMissingPermissions):
@@ -27,13 +26,13 @@ class TwitchCog(metaclass=utils.MetaCog, colour=0x6441a5,
         elif not isinstance(after.activity, discord.Streaming):
             return
 
-        async with self.bot.pool.acquire() as conn:
+        async with self.dbot.pool.acquire() as conn:
             data = await conn.fetchval("""SELECT twitch FROM guilds WHERE id = $1""", before.guild.id)
 
         if not data:
             return
 
-        channel = self.bot.get_channel(data)
+        channel = self.dbot.get_channel(data)
         if not channel:
             return
 
@@ -64,7 +63,7 @@ class TwitchCog(metaclass=utils.MetaCog, colour=0x6441a5,
         if channel is None:
             channel = ctx.channel
 
-        async with self.bot.pool.acquire() as conn:
+        async with self.dbot.pool.acquire() as conn:
             await conn.execute("""UPDATE guilds SET twitch = $1 WHERE guilds.id = $2""", channel.id, ctx.guild.id)
 
         role = discord.utils.get(ctx.guild.roles, name='Stream Announcements')
@@ -79,7 +78,7 @@ class TwitchCog(metaclass=utils.MetaCog, colour=0x6441a5,
     @twitch.command(name='subscribe', aliases=['sub'])
     @commands.bot_has_permissions(manage_roles=True)
     async def twitch_subscribe(self, ctx):
-        async with self.bot.pool.acquire() as conn:
+        async with self.dbot.pool.acquire() as conn:
             data = await conn.fetchval("""SELECT twitch FROM guilds WHERE id = $1""", ctx.guild.id)
 
             if not data:
@@ -95,7 +94,7 @@ class TwitchCog(metaclass=utils.MetaCog, colour=0x6441a5,
     async def twitch_setup(self, ctx, *, channel: str):
         """Setup your Twitch channel for announcements.
         """
-        async with self.bot.pool.acquire() as conn:
+        async with self.dbot.pool.acquire() as conn:
             data = await conn.fetchval("""SELECT twitch FROM guilds WHERE id = $1""", ctx.guild.id)
 
             if not data:

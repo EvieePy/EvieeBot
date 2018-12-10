@@ -296,7 +296,6 @@ class Admin(metaclass=utils.MetaCog, private=True):
 
         await ctx.send('Response sent')
 
-    @commands.command(name='test lol')
-    async def test_(self, ctx):
-        thing = [m for m in ctx.guild.members if m.joined_at is None]
-        await ctx.send(f'{len(thing)}')
+    @commands.command(name='test')
+    async def test_(self, ctx, thing: typing.Union[discord.Member, discord.User]):
+        await ctx.send(thing)
