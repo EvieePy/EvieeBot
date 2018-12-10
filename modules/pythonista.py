@@ -13,6 +13,8 @@ class Pythonista(metaclass=utils.MetaCog):
         self.channel = self.bot.get_channel(491097233765433346)
         self.rtfm_cache = {}
 
+        self.raid = False
+
         self.bot.loop.create_task(self.build_rtfm_cache())
 
     async def on_member_join(self, member):
@@ -82,6 +84,31 @@ class Pythonista(metaclass=utils.MetaCog):
 
         for a in soup.find_all('a', {'class': 'headerlink'}):
             self.rtfm_cache[a['href'].replace('#twitchio.ext.commands.', '')] = basecom + a['href']
+
+    @commands.command(name='raid', hidden=True)
+    @commands.has_role('Mod')
+    async def raid_(self, ctx):
+        if self.raid:
+            await ctx.send('Raid Mode: ON')
+        else:
+            await ctx.send('Raid Mode: Off')
+
+    @raid_.command(name='on', hidden=True)
+    async def raid_on(self, ctx):
+        for member in ctx.guild.members:
+            await member.add_roles(discord.utils.get(ctx.guild.roles, name='muted'))
+
+        self.raid = True
+        await ctx.send('Raid Mode: On')
+
+    @raid_.command(name='off', hidden=True)
+    async def raid_off(self, ctx):
+        for member in ctx.guild.members:
+            await member.remove_roles(discord.utils.get(ctx.guild.roles, name='muted'))
+
+        self.raid = False
+        await ctx.send('Raid Mode: Off')
+
 
 
 
