@@ -117,12 +117,6 @@ class Botto(commands.Bot):
         self.fkey = Fernet(config.get('ENCRYPTION', '_token').encode())
 
         super().__init__(command_prefix=get_prefix)
-        self.lavalink = lavalink.Client(bot=self,
-                                        password=self._config.get("LL", "value"),
-                                        rest_port=2333, ws_port=80,
-                                        loop=self.loop,
-                                        log_level=logging.WARN,
-                                        host='51.158.68.132')
 
     def is_reconnecting(self):
         """Return the bots reconnection state."""
