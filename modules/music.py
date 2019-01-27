@@ -42,7 +42,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         nodes = {'MAIN': {'host': '51.158.68.132',
                           'port': 2333,
                           'rest_url': 'http://51.158.68.132:2333',
-                          'password': 'P+~&@K<AP^>G[A![7FA{RK1G*TYW8O?C0O[!-9$}-,Z+]VS-~0P//~;7J&/0KO$(-_)B=LT,%`.UU!P?',
+                          'password': self.bot._config.get('LL', 'value'),
                           'identifier': 'MAIN',
                           'region': 'us_central'}}
 
@@ -145,8 +145,6 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         elif ctx.invoked_with == 'play' and not player.is_connected:
             return True
         elif ctx.invoked_with == 'queue' or ctx.invoked_with == 'q' and player.is_connected:
-            return True
-        elif ctx.invoked_with == 'faves' or ctx.invoked_with == 'favourites':
             return True
 
         if ctx.author not in self.bot.get_channel(int(player.channel_id)).members:
@@ -760,8 +758,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await player.set_eq(levels=levels)
         await ctx.send(f'Set EQ to: `{levels}`')
 
-    @commands.command()
-    async def info(self, ctx):
+    @commands.command(cls=utils.EvieeCommand)
+    async def _info(self, ctx):
         """Retrieve various Node/Server/Player information."""
         player = self.bot.wavelink.get_player(ctx.guild.id, cls=Player)
         node = player.node
