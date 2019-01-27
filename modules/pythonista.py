@@ -85,7 +85,7 @@ class Pythonista(metaclass=utils.MetaCog):
         for a in soup.find_all('a', {'class': 'headerlink'}):
             self.rtfm_cache[a['href'].replace('#twitchio.ext.commands.', '')] = basecom + a['href']
 
-    @commands.group(name='raid', hidden=True)
+    @commands.group(name='raid', hidden=True, invoke_without_command=True)
     @commands.has_role('Mod')
     async def raid_(self, ctx):
         if self.raid:

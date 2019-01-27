@@ -297,5 +297,6 @@ class Admin(metaclass=utils.MetaCog, private=True):
         await ctx.send('Response sent')
 
     @commands.command(name='test')
-    async def test_(self, ctx, thing: typing.Union[discord.Member, discord.User]):
-        await ctx.send(thing)
+    async def test_(self, ctx):
+        if ctx.author.guild_permissions.administrator:
+            print('Yeah boi')

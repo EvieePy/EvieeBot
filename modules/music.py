@@ -598,7 +598,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         await ctx.paginate(title=f'Upcoming({len(entries)} entries) Page', entries=entries)
 
-    @commands.command(name='remove_songs', aliases=['removesongs', 'kill', 'delete', 'del'])
+    @commands.command(name='remove_songs', aliases=['removesongs'])
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def remove_songs_(self, ctx, *tracks):
         player = self.bot.wavelink.get_player(ctx.guild.id, cls=Player)
