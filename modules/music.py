@@ -67,9 +67,6 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         """Our event hook. Dispatched when an event occurs on our Node."""
         print(event)
         if isinstance(event, (wavelink.TrackEnd, wavelink.TrackStuck, wavelink.TrackException)):
-            if event.player.was_back:
-                event.player.was_back = False
-                return
             event.player.next_event.set()
 
     def required(self, player, invoked_with):
