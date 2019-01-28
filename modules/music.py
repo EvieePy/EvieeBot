@@ -3,6 +3,7 @@ import base64
 import datetime
 import discord
 import humanize
+import logging
 import re
 import math
 import random
@@ -18,6 +19,12 @@ import utils
 
 RURL = re.compile('https?://(?:www\.)?.+')
 SURL = re.compile('https://open.spotify.com?.+playlist/([a-zA-Z0-9]+)')
+
+logger = logging.getLogger('wavelink')
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler(filename='wavelink.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
 
 
 class NotInChannel(Exception):
@@ -59,13 +66,11 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
     def event_hook(self, event):
         """Our event hook. Dispatched when an event occurs on our Node."""
         print(event)
-        if isinstance(event, wavelink.TrackEnd):
+        if isinstance(event, (wavelink.TrackEnd, wavelink.TrackStuck, wavelink.TrackException)):
             if event.player.was_back:
                 event.player.was_back = False
                 return
             event.player.next_event.set()
-        elif isinstance(event, wavelink.TrackException):
-            print(event.error)
 
     def required(self, player, invoked_with):
         channel = self.bot.get_channel(int(player.channel_id))
