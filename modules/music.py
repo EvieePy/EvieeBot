@@ -3,7 +3,6 @@ import base64
 import datetime
 import discord
 import humanize
-import logging
 import re
 import math
 import random
@@ -15,16 +14,9 @@ from discord.ext import commands
 from typing import Union
 
 from plugin.player import Player, Track
-import utils
 
 RURL = re.compile('https?://(?:www\.)?.+')
 SURL = re.compile('https://open.spotify.com?.+playlist/([a-zA-Z0-9]+)')
-
-logger = logging.getLogger('wavelink')
-logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(filename='wavelink.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-logger.addHandler(handler)
 
 
 class NotInChannel(Exception):
@@ -39,8 +31,8 @@ class NoChannel(Exception):
 class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png', colour=0x38fab3):
 
     def __init__(self, bot: Union[commands.Bot, commands.AutoShardedBot]):
-        bot.wavelink = wavelink.Client(bot)
         self.bot = bot
+        bot.wavelink = wavelink.Client(self.bot)
 
         bot.loop.create_task(self.refresh_token())
         bot.loop.create_task(self.initiate_nodes())
@@ -148,6 +140,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
             return True
         elif ctx.invoked_with == 'queue' or ctx.invoked_with == 'q' and player.is_connected:
             return True
+        elif ctx.invoked_with == 'faves' or ctx.invoked_with == 'favourites':
+            return True
 
         if ctx.author not in self.bot.get_channel(int(player.channel_id)).members:
             await ctx.send(f'You must be in `{self.bot.get_channel(int(player.channel_id))}` to use the player.')
@@ -218,8 +212,6 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         async with self.bot.session.get(f'https://api.spotify.com/v1/playlists/{id_}/tracks', headers=headers) as resp:
             data = await resp.json()
-
-        return data
 
     @commands.command(name='connect', aliases=['join'])
     async def connect_(self, ctx, *, channel: discord.VoiceChannel = None):
@@ -509,35 +501,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         player = self.bot.wavelink.get_player(ctx.guild.id, cls=Player)
 
         await player.destroy_controller()
-
-        """
-        try:
-            player.player_loop.cancel()
-        except Exception:
-            pass
-
-        try:
-            queue.updater_task.cancel()
-        except Exception:
-            pass
-        """
-
-        await player.disconnect()
         await player.stop()
-
-        for task in player._tasks:
-            try:
-                task.cancel()
-            except Exception:
-                pass
-
-        del self.bot.wavelink.players[ctx.guild.id]
-
-        for n in self.bot.wavelink.nodes.values():
-            try:
-                del n.players[ctx.guild.id]
-            except KeyError:
-                pass
+        await player.disconnect()
 
     @commands.command(name='volume', aliases=['vol'])
     @commands.cooldown(1, 2, commands.BucketType.guild)
@@ -600,7 +565,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         await ctx.paginate(title=f'Upcoming({len(entries)} entries) Page', entries=entries)
 
-    @commands.command(name='remove_songs', aliases=['removesongs'])
+    @commands.command(name='remove_songs', aliases=['removesongs', 'rs'])
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def remove_songs_(self, ctx, *tracks):
         player = self.bot.wavelink.get_player(ctx.guild.id, cls=Player)
@@ -760,8 +725,8 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await player.set_eq(levels=levels)
         await ctx.send(f'Set EQ to: `{levels}`')
 
-    @commands.command(cls=utils.EvieeCommand)
-    async def _info(self, ctx):
+    @commands.command()
+    async def info(self, ctx):
         """Retrieve various Node/Server/Player information."""
         player = self.bot.wavelink.get_player(ctx.guild.id, cls=Player)
         node = player.node

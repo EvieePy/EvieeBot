@@ -122,7 +122,6 @@ class Botto(commands.Bot):
         """Return the bots reconnection state."""
         return self._reconnecting.is_set()
 
-    @utils.evieeloads
     async def async_init(self):
         """Async Initializer."""
         self.remove_command('help')
@@ -135,6 +134,8 @@ class Botto(commands.Bot):
 
         self.loop.create_task(self.wspings())
         self.loop.create_task(self.rttpings())
+
+        return
 
     @utils.backoff_loop()
     async def wspings(self):
