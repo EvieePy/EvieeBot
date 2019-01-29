@@ -725,7 +725,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await ctx.send(f'Set EQ to: `{levels}`')
 
     @commands.command(utils.EvieeCommand)
-    async def info(self, ctx):
+    async def _info(self, ctx):
         """Retrieve various Node/Server/Player information."""
         player = self.bot.wavelink.get_player(ctx.guild.id, cls=Player)
         node = player.node
