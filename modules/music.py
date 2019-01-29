@@ -135,13 +135,11 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
         if ctx.invoked_with == 'connect' and not player.is_connected:
             return True
-        elif ctx.invoked_with == 'info' and not player.is_connected:
+        elif ctx.invoked_with == '_info' and not player.is_connected:
             return True
         elif ctx.invoked_with == 'play' and not player.is_connected:
             return True
         elif ctx.invoked_with == 'queue' or ctx.invoked_with == 'q' and player.is_connected:
-            return True
-        elif ctx.invoked_with == 'faves' or ctx.invoked_with == 'favourites':
             return True
 
         if ctx.author not in self.bot.get_channel(int(player.channel_id)).members:
@@ -446,7 +444,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
 
     @commands.command(name='back')
     @commands.cooldown(5, 10, commands.BucketType.user)
-    async def back_(self, ctx):
+    async def _back(self, ctx):
         """Go backwards in the Queue, and replay songs.
         Examples
         ----------
@@ -726,7 +724,7 @@ class Music(metaclass=utils.MetaCog, thumbnail='https://i.imgur.com/8eJgtrh.png'
         await player.set_eq(levels=levels)
         await ctx.send(f'Set EQ to: `{levels}`')
 
-    @commands.command()
+    @commands.command(utils.EvieeCommand)
     async def info(self, ctx):
         """Retrieve various Node/Server/Player information."""
         player = self.bot.wavelink.get_player(ctx.guild.id, cls=Player)
