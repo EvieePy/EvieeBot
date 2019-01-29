@@ -135,8 +135,6 @@ class Botto(commands.Bot):
         self.loop.create_task(self.wspings())
         self.loop.create_task(self.rttpings())
 
-        return
-
     @utils.backoff_loop()
     async def wspings(self):
         await asyncio.sleep(60)
